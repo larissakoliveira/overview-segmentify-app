@@ -1,0 +1,269 @@
+// Variables
+$primary-color: #1890ff;
+$border-color: #f0f0f0;
+$text-color: #333;
+$sidebar-width: 300px;
+$header-height: 64px;
+$mobile-breakpoint: 768px;
+$tablet-breakpoint: 994px;
+
+// Breakpoints
+$mobile: 768px;
+$tablet: 1024px;
+
+// Mixins
+@mixin mobile {
+  @media (max-width: #{$mobile-breakpoint}) {
+    @content;
+  }
+}
+
+@mixin tablet {
+  @media (min-width: #{$mobile-breakpoint + 1}) and (max-width: #{$tablet-breakpoint}) {
+    @content;
+  }
+}
+
+@mixin mobile-tablet {
+  @media (max-width: #{$tablet-breakpoint}) {
+    @content;
+  }
+}
+
+// Global styles
+html, body {
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  height: 100%;
+}
+
+.app-container {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+
+  .header {
+    height: 64px;
+    padding: 0 16px;
+    background: #fff;
+    border-bottom: 1px solid #f0f0f0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    z-index: 100;
+
+    .header-content {
+      height: 100%;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+
+      .menu-trigger {
+        display: none;
+        @media (max-width: $mobile) {
+          display: block;
+        }
+      }
+    }
+
+    .toolbar {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      flex-wrap: wrap;
+
+      @media (max-width: $mobile) {
+        gap: 12px;
+        .ant-space {
+          flex-wrap: wrap;
+        }
+      }
+    }
+
+    @media (max-width: $mobile) {
+      .ant-space {
+        gap: 8px !important;
+      }
+    }
+  }
+
+  .main-content {
+    position: relative;
+    height: calc(100vh - 64px);
+    background: #fafafa;
+    overflow: hidden;
+    display: flex;
+
+    .canvas-container {
+      flex: 1;
+      height: 100%;
+      position: relative;
+      overflow: hidden;
+
+      canvas {
+        position: absolute;
+        top: 0;
+        left: 0;
+        touch-action: none;
+      }
+    }
+  }
+
+  .sidebar {
+    background: #fff;
+    border-left: 1px solid #f0f0f0;
+    overflow-y: auto;
+    padding: 0;
+    width: 300px;
+
+    @media (max-width: $tablet) {
+      width: 250px;
+    }
+
+    @media (max-width: $mobile) {
+      position: fixed;
+      top: 64px;
+      right: 0;
+      height: calc(100vh - 64px);
+      transform: translateX(100%);
+      transition: transform 0.3s ease;
+      z-index: 1000;
+      
+      &.visible {
+        transform: translateX(0);
+      }
+    }
+  }
+}
+
+.class-manager {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+
+  .class-manager-header {
+    padding: 16px;
+    border-bottom: 1px solid #f0f0f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    h3 {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 500;
+    }
+  }
+
+  .class-manager-content {
+    flex: 1;
+    padding: 16px;
+    overflow-y: auto;
+
+    .class-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .class-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px;
+      border-radius: 4px;
+      border: 1px solid #f0f0f0;
+      cursor: pointer;
+      transition: all 0.3s;
+
+      &:hover {
+        background: #fafafa;
+      }
+
+      &.active {
+        background: #e6f7ff;
+        border-color: #91d5ff;
+      }
+
+      .color-box {
+        width: 20px;
+        height: 20px;
+        border-radius: 4px;
+      }
+
+      .class-name {
+        flex: 1;
+        font-size: 14px;
+      }
+
+      .delete-btn {
+        opacity: 0;
+        transition: opacity 0.3s;
+      }
+
+      &:hover .delete-btn {
+        opacity: 1;
+      }
+    }
+
+    .add-class-form {
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid #f0f0f0;
+
+      .form-row {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 8px;
+      }
+    }
+  }
+}
+
+// Ant Design overrides
+.ant-layout {
+  background: #fff !important;
+}
+
+.ant-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ant-drawer {
+  .ant-drawer-header {
+    padding: 16px 24px;
+    border-bottom: 1px solid #f0f0f0;
+  }
+
+  .ant-drawer-body {
+    padding: 0;
+  }
+}
+
+.ant-select-selector {
+  height: 32px !important;
+  
+  .ant-select-selection-item {
+    line-height: 30px !important;
+  }
+}
+
+// Mobile-specific styles
+@media (max-width: $mobile) {
+  .ant-btn {
+    padding: 4px 8px;
+    font-size: 14px;
+  }
+
+  .ant-select {
+    width: 100px !important;
+  }
+}
+
+// Tablet-specific styles
+@media (min-width: $mobile + 1) and (max-width: $tablet) {
+  .ant-select {
+    width: 120px !important;
+  }
+}
