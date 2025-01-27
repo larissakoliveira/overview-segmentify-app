@@ -82,6 +82,59 @@ const App: React.FC = () => {
     });
   }, [currentHistoryIndex]);
 
+  // const handleUndo = useCallback(() => {
+  //   if (currentHistoryIndex > 0) {
+  //     setCurrentHistoryIndex(prev => {
+  //       const newIndex = prev - 1;
+  //       if (fabricCanvasRef.current) {
+  //         fabricCanvasRef.current.loadFromJSON(history[newIndex], () => {
+  //           fabricCanvasRef.current.renderAll();
+  //         });
+  //       }
+  //       return newIndex;
+  //     });
+  //   }
+  // }, [currentHistoryIndex, history]);
+
+  // const handleRedo = useCallback(() => {
+  //   if (currentHistoryIndex < history.length - 1) {
+  //     setCurrentHistoryIndex(prev => {
+  //       const newIndex = prev + 1;
+  //       if (fabricCanvasRef.current) {
+  //         fabricCanvasRef.current.loadFromJSON(history[newIndex], () => {
+  //           fabricCanvasRef.current.renderAll();
+  //         });
+  //       }
+  //       return newIndex;
+  //     });
+  //   }
+  // }, [currentHistoryIndex, history]);
+
+  // const handleImageUpload = useCallback((file: File) => {
+  //   if (!file) {
+  //     message.error('Please select an image file');
+  //     return;
+  //   }
+
+  //   if (!file.type.startsWith('image/')) {
+  //     message.error('Please upload an image file');
+  //     return;
+  //   }
+
+  //   const reader = new FileReader();
+  //   reader.onload = (e) => {
+  //     const result = e.target?.result;
+  //     if (result && typeof result === 'string') {
+  //       setCurrentImage(result);
+  //       setHistory([]);
+  //       setCurrentHistoryIndex(-1);
+  //     }
+  //   };
+  //   reader.onerror = () => {
+  //     message.error('Error reading the image file');
+  //   };
+  //   reader.readAsDataURL(file);
+  // }, []);
   const handleUndo = useCallback(() => {
     if (currentHistoryIndex > 0) {
       setCurrentHistoryIndex(prev => {
@@ -95,7 +148,7 @@ const App: React.FC = () => {
       });
     }
   }, [currentHistoryIndex, history]);
-
+  
   const handleRedo = useCallback(() => {
     if (currentHistoryIndex < history.length - 1) {
       setCurrentHistoryIndex(prev => {
@@ -109,18 +162,18 @@ const App: React.FC = () => {
       });
     }
   }, [currentHistoryIndex, history]);
-
+  
   const handleImageUpload = useCallback((file: File) => {
     if (!file) {
       message.error('Please select an image file');
       return;
     }
-
+  
     if (!file.type.startsWith('image/')) {
       message.error('Please upload an image file');
       return;
     }
-
+  
     const reader = new FileReader();
     reader.onload = (e) => {
       const result = e.target?.result;
@@ -135,6 +188,7 @@ const App: React.FC = () => {
     };
     reader.readAsDataURL(file);
   }, []);
+  
 
   const handleExport = useCallback(() => {
     if (!currentImage) {

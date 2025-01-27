@@ -209,20 +209,23 @@ const Canvas: React.FC<CanvasProps> = ({
     const canvas = fabricCanvasRef.current;
     if (!canvas) return;
   
-    canvas.isDrawingMode = mode === 'brush';
+    canvas.isDrawingMode = mode === 'brush' || mode === 'eraser';
     canvas.selection = false;
   
     const brush = canvas.freeDrawingBrush as fabric.PencilBrush;
     if (brush) {
-      brush.width = brushSize;
-      brush.color = activeClass?.color || '#000000';
+      brush.width = brushSize * (1 / zoom);
+      // Set brush color to white (or the background color) for eraser mode
+      brush.color = mode === 'eraser' ? '#ffffff' : activeClass?.color || '#000000';
     }
   
     // Update cursor for different tools
     if (mode === 'pan') {
       canvas.defaultCursor = 'grab';
+      canvas.hoverCursor = 'grab';
     } else {
       canvas.defaultCursor = 'crosshair';
+      canvas.hoverCursor = 'crosshair';
     }
   
     // Clear polygon state if switching from polygon mode
@@ -231,7 +234,7 @@ const Canvas: React.FC<CanvasProps> = ({
       currentPolygon.current = null;
       isDrawing.current = false;
     }
-  }, [mode, brushSize, activeClass, fabricCanvasRef]);
+  }, [mode, brushSize, activeClass, zoom, fabricCanvasRef]);
 
   // Handle polygon drawing
   useEffect(() => {
@@ -289,6 +292,117 @@ const Canvas: React.FC<CanvasProps> = ({
       canvas.off('mouse:dblclick', handleDblClick);
     };
   }, [mode, activeClass, onHistoryUpdate, fabricCanvasRef]);
+
+  // Handle polygon drawing
+useEffect(() => {
+  const canvas = fabricCanvasRef.current;
+  if (!canvas) return;
+
+  const handleMouseDown = (e: fabric.IEvent) => {
+    if (mode !== 'polygon' || !activeClass) return;
+
+    const pointer = canvas.getPointer(e.e);
+    polygonPoints.current.push(new fabric.Point(pointer.x, pointer.y));
+
+    if (polygonPoints.current.length === 1) {
+      currentPolygon.current = new fabric.Polygon([...polygonPoints.current], {
+        fill: activeClass.color,
+        opacity: 0.5,
+        selectable: false,
+        evented: false,
+        objectCaching: false,
+      });
+      canvas.add(currentPolygon.current);
+    } else if (currentPolygon.current) {
+      currentPolygon.current.set({ points: [...polygonPoints.current] });
+      canvas.renderAll();
+    }
+  };
+
+  const handleDblClick = () => {
+    if (mode !== 'polygon' || polygonPoints.current.length < 3) return;
+
+    if (currentPolygon.current) {
+      currentPolygon.current.set({
+        points: [...polygonPoints.current],
+        selectable: false,
+        evented: false,
+      });
+      canvas.renderAll();
+
+      onHistoryUpdate(JSON.stringify(canvas));
+      currentPolygon.current = null;
+      polygonPoints.current = [];
+      isDrawing.current = false;
+    }
+  };
+
+  canvas.on('mouse:down', handleMouseDown);
+  canvas.on('mouse:dblclick', handleDblClick);
+
+  return () => {
+    canvas.off('mouse:down', handleMouseDown);
+    canvas.off('mouse:dblclick', handleDblClick);
+  };
+}, [mode, activeClass, onHistoryUpdate, fabricCanvasRef]);
+
+// Add history updates for brush strokes and erasing
+useEffect(() => {
+  const canvas = fabricCanvasRef.current;
+  if (!canvas) return;
+
+  const handlePathCreated = (e: fabric.IEvent & { path?: fabric.Path }) => {
+    const path = e.path;
+    if (path) {
+      path.selectable = false;
+      path.evented = false;
+    }
+    onHistoryUpdate(JSON.stringify(canvas));
+  };
+
+  const handleMouseUp = () => {
+    if (mode === 'eraser') {
+      onHistoryUpdate(JSON.stringify(canvas));
+    }
+  };
+
+  canvas.on('path:created', handlePathCreated);
+  canvas.on('mouse:up', handleMouseUp);
+
+  return () => {
+    canvas.off('path:created', handlePathCreated);
+    canvas.off('mouse:up', handleMouseUp);
+  };
+}, [mode, onHistoryUpdate, fabricCanvasRef]);
+
+useEffect(() => {
+  const canvas = fabricCanvasRef.current;
+  if (!canvas) return;
+
+  const handleMouseDown = (e: fabric.IEvent) => {
+    if (mode !== 'eraser') return;
+
+    const pointer = canvas.getPointer(e.e);
+    const point = new fabric.Point(pointer.x, pointer.y);
+
+    const objectsToRemove = canvas.getObjects().filter((obj) => {
+      if (obj.type === 'image') return false;
+
+      return obj.containsPoint(point);
+    });
+
+    objectsToRemove.forEach((obj) => canvas.remove(obj));
+
+    onHistoryUpdate(JSON.stringify(canvas));
+  };
+
+  canvas.on('mouse:down', handleMouseDown);
+
+  return () => {
+    canvas.off('mouse:down', handleMouseDown);
+  };
+}, [mode, onHistoryUpdate, fabricCanvasRef]);
+
   
   return (
     <div ref={containerRef} className="canvas-container">
