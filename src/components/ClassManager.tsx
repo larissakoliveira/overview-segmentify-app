@@ -34,6 +34,11 @@ const ClassManager: React.FC<ClassManagerProps> = ({
       return;
     }
 
+    if (classes.some(c => c.color.toLowerCase() === selectedColor.toLowerCase())) {
+      message.error('This color is already assigned to another class');
+      return;
+    }
+
     onAddClass(newClassName.trim(), selectedColor);
     setNewClassName('');
     setSelectedColor('#FF0000');
@@ -42,10 +47,6 @@ const ClassManager: React.FC<ClassManagerProps> = ({
 
   const handleDeleteClass = (classId: number, e: React.MouseEvent) => {
     e.stopPropagation();
-    if (classes.length === 1) {
-      message.error('Cannot delete the last class');
-      return;
-    }
     onDeleteClass(classId);
   };
 
@@ -116,10 +117,16 @@ const ClassManager: React.FC<ClassManagerProps> = ({
             className={`class-item ${activeClass?.id === item.id ? 'active' : ''}`}
             onClick={() => onSelectClass(item.id)}
           >
-            <div className="class-item-content">
+            <div className="class-item-content" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <div
                 className="class-color"
-                style={{ backgroundColor: item.color }}
+                style={{
+                  backgroundColor: item.color,
+                  width: '16px',
+                  height: '16px',
+                  borderRadius: '4px',
+                  border: '1px solid #d9d9d9',
+                }}
               />
               <span className="class-name">{item.name}</span>
             </div>

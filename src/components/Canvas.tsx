@@ -8,7 +8,7 @@ interface CanvasProps {
   activeClass: SegmentationClass | null;
   currentImage: string | null;
   onHistoryUpdate: (canvasState: string) => void;
-  fabricCanvasRef: React.MutableRefObject<fabric.Canvas | null>;
+  fabricCanvasRef: React.RefObject<fabric.Canvas | null>;
   zoom: number;
 }
 
@@ -194,8 +194,8 @@ const Canvas: React.FC<CanvasProps> = ({
         scaleY,
         left: (canvasWidth - img.width! * scaleX) / 2,
         top: (canvasHeight - img.height! * scaleY) / 2,
-        selectable: false, // Prevent moving the image
-        evented: false,    // Disable interactions with the image
+        selectable: false,
+        evented: false,
       });
   
       canvas.setBackgroundImage(img, canvas.renderAll.bind(canvas), {
@@ -204,35 +204,25 @@ const Canvas: React.FC<CanvasProps> = ({
     });
   }, [currentImage, fabricCanvasRef]);
 
-  // Handle drawing mode changes
   useEffect(() => {
     const canvas = fabricCanvasRef.current;
     if (!canvas) return;
   
-    canvas.isDrawingMode = mode === 'brush' || mode === 'eraser';
+    canvas.isDrawingMode = mode === 'brush';
     canvas.selection = false;
   
     const brush = canvas.freeDrawingBrush as fabric.PencilBrush;
     if (brush) {
       brush.width = brushSize * (1 / zoom);
-      // Set brush color to white (or the background color) for eraser mode
-      brush.color = mode === 'eraser' ? '#ffffff' : activeClass?.color || '#000000';
+      brush.color = activeClass?.color || '#000000';
     }
   
-    // Update cursor for different tools
-    if (mode === 'pan') {
+    if (mode === 'eraser') {
+      canvas.defaultCursor = 'crosshair';
+    } else if (mode === 'pan') {
       canvas.defaultCursor = 'grab';
-      canvas.hoverCursor = 'grab';
     } else {
       canvas.defaultCursor = 'crosshair';
-      canvas.hoverCursor = 'crosshair';
-    }
-  
-    // Clear polygon state if switching from polygon mode
-    if (mode !== 'polygon') {
-      polygonPoints.current = [];
-      currentPolygon.current = null;
-      isDrawing.current = false;
     }
   }, [mode, brushSize, activeClass, zoom, fabricCanvasRef]);
 
@@ -387,13 +377,15 @@ useEffect(() => {
 
     const objectsToRemove = canvas.getObjects().filter((obj) => {
       if (obj.type === 'image') return false;
-
       return obj.containsPoint(point);
     });
 
-    objectsToRemove.forEach((obj) => canvas.remove(obj));
+    objectsToRemove.forEach((obj) => {
+      canvas.remove(obj);
+    });
 
     onHistoryUpdate(JSON.stringify(canvas));
+    canvas.renderAll(); // Refresh the canvas
   };
 
   canvas.on('mouse:down', handleMouseDown);
@@ -402,7 +394,6 @@ useEffect(() => {
     canvas.off('mouse:down', handleMouseDown);
   };
 }, [mode, onHistoryUpdate, fabricCanvasRef]);
-
   
   return (
     <div ref={containerRef} className="canvas-container">

@@ -142,6 +142,19 @@ html, body {
   display: flex;
   flex-direction: column;
 
+  .class-item-content {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  
+  .class-color {
+    width: 16px;
+    height: 16px;
+    border-radius: 4px;
+    border: 1px solid #d9d9d9;
+  }
+  
   .class-manager-header {
     padding: 16px;
     border-bottom: 1px solid #f0f0f0;
