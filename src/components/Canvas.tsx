@@ -165,18 +165,20 @@ const Canvas: React.FC<CanvasProps> = ({
   useEffect(() => {
     const canvas = fabricCanvasRef.current;
     if (!canvas || !currentImage) return;
-
+  
     fabric.Image.fromURL(currentImage, (img: fabric.Image) => {
       if (!img) return;
-      
+  
+      // Clear the canvas and set background color
       canvas.clear();
       canvas.backgroundColor = '#f0f0f0';
-      
-      const canvasWidth = canvas.getWidth() || window.innerWidth;
-      const canvasHeight = canvas.getHeight() || (window.innerHeight - 64);
+  
+      // Get canvas dimensions
+      const canvasWidth = canvas.getWidth();
+      const canvasHeight = canvas.getHeight();
       const imgAspectRatio = img.width! / img.height!;
       const canvasAspectRatio = canvasWidth / canvasHeight;
-      
+  
       let scaleX, scaleY;
       if (imgAspectRatio > canvasAspectRatio) {
         scaleX = (canvasWidth * 0.8) / img.width!;
@@ -185,78 +187,66 @@ const Canvas: React.FC<CanvasProps> = ({
         scaleY = (canvasHeight * 0.8) / img.height!;
         scaleX = scaleY;
       }
-      
+  
+      // Set the image position and size
       img.set({
         scaleX,
         scaleY,
         left: (canvasWidth - img.width! * scaleX) / 2,
         top: (canvasHeight - img.height! * scaleY) / 2,
-        selectable: false,
-        evented: false,
+        selectable: false, // Prevent moving the image
+        evented: false,    // Disable interactions with the image
       });
-      
-      canvas.add(img);
-      canvas.renderAll();
-      onHistoryUpdate(JSON.stringify(canvas));
+  
+      canvas.setBackgroundImage(img, canvas.renderAll.bind(canvas), {
+        crossOrigin: 'anonymous', // Avoid CORS issues
+      });
     });
-  }, [currentImage, onHistoryUpdate]);
+  }, [currentImage, fabricCanvasRef]);
 
   // Handle drawing mode changes
   useEffect(() => {
     const canvas = fabricCanvasRef.current;
     if (!canvas) return;
-
-    canvas.isDrawingMode = mode === 'brush' || mode === 'eraser';
+  
+    canvas.isDrawingMode = mode === 'brush';
     canvas.selection = false;
-
-    const brush = canvas.freeDrawingBrush;
+  
+    const brush = canvas.freeDrawingBrush as fabric.PencilBrush;
     if (brush) {
-      brush.width = brushSize * (1 / zoom);
-      brush.color = mode === 'eraser' ? '#ffffff' : (activeClass?.color || '#000000');
+      brush.width = brushSize;
+      brush.color = activeClass?.color || '#000000';
     }
-
-    // Update cursor style
+  
+    // Update cursor for different tools
     if (mode === 'pan') {
       canvas.defaultCursor = 'grab';
-      canvas.hoverCursor = 'grab';
     } else {
       canvas.defaultCursor = 'crosshair';
-      canvas.hoverCursor = 'crosshair';
     }
-
-    // Handle path creation for brush strokes
-    const handlePathCreated = (e: fabric.IEvent & { path?: fabric.Path }) => {
-      const path = e.path;
-      if (path) {
-        path.selectable = false;
-        path.evented = false;
-      }
-      onHistoryUpdate(JSON.stringify(canvas));
-    };
-
-    canvas.on('path:created', handlePathCreated);
-
-    return () => {
-      canvas.off('path:created', handlePathCreated);
-    };
-  }, [mode, brushSize, activeClass, zoom, onHistoryUpdate]);
+  
+    // Clear polygon state if switching from polygon mode
+    if (mode !== 'polygon') {
+      polygonPoints.current = [];
+      currentPolygon.current = null;
+      isDrawing.current = false;
+    }
+  }, [mode, brushSize, activeClass, fabricCanvasRef]);
 
   // Handle polygon drawing
   useEffect(() => {
     const canvas = fabricCanvasRef.current;
     if (!canvas) return;
-
+  
     const handleMouseDown = (e: fabric.IEvent) => {
       if (mode !== 'polygon' || !activeClass) return;
-
+  
       const pointer = canvas.getPointer(e.e);
-      if (!pointer) return;
-
-      isDrawing.current = true;
       polygonPoints.current.push(new fabric.Point(pointer.x, pointer.y));
-
+  
       if (polygonPoints.current.length === 1) {
-        currentPolygon.current = new fabric.Polygon(polygonPoints.current, {
+        // Create a new polygon
+        currentPolygon.current = new fabric.Polygon([...polygonPoints.current], {
           fill: activeClass.color,
           opacity: 0.5,
           selectable: false,
@@ -265,62 +255,41 @@ const Canvas: React.FC<CanvasProps> = ({
         });
         canvas.add(currentPolygon.current);
       } else if (currentPolygon.current) {
+        // Update the existing polygon
         currentPolygon.current.set({ points: [...polygonPoints.current] });
         canvas.renderAll();
       }
     };
-
-    const handleMouseMove = (e: fabric.IEvent) => {
-      if (!isDrawing.current || mode !== 'polygon' || !currentPolygon.current) return;
-
-      const pointer = canvas.getPointer(e.e);
-      if (!pointer) return;
-
-      const points = [...polygonPoints.current];
-      if (points.length > 0) {
-        points.push(new fabric.Point(pointer.x, pointer.y));
-        currentPolygon.current.set({ points });
+  
+    const handleDblClick = () => {
+      if (mode !== 'polygon' || polygonPoints.current.length < 3) return;
+  
+      // Check if currentPolygon.current exists before accessing it
+      if (currentPolygon.current) {
+        currentPolygon.current.set({
+          points: [...polygonPoints.current],
+          selectable: false,
+          evented: false,
+        });
         canvas.renderAll();
+  
+        // Save to history and reset state
+        onHistoryUpdate(JSON.stringify(canvas));
+        currentPolygon.current = null;
+        polygonPoints.current = [];
+        isDrawing.current = false;
       }
     };
-
-    const handleMouseUp = () => {
-      if (mode !== 'polygon') return;
-      isDrawing.current = false;
-    };
-
-    const handleDblClick = () => {
-      if (mode !== 'polygon' || !currentPolygon.current || polygonPoints.current.length < 3) return;
-
-      // Complete the polygon
-      currentPolygon.current.set({
-        points: [...polygonPoints.current],
-        opacity: 0.5,
-        selectable: false,
-        evented: false,
-      });
-      canvas.renderAll();
-      onHistoryUpdate(JSON.stringify(canvas));
-
-      // Reset for next polygon
-      currentPolygon.current = null;
-      polygonPoints.current = [];
-      isDrawing.current = false;
-    };
-
+  
     canvas.on('mouse:down', handleMouseDown);
-    canvas.on('mouse:move', handleMouseMove);
-    canvas.on('mouse:up', handleMouseUp);
     canvas.on('mouse:dblclick', handleDblClick);
-
+  
     return () => {
       canvas.off('mouse:down', handleMouseDown);
-      canvas.off('mouse:move', handleMouseMove);
-      canvas.off('mouse:up', handleMouseUp);
       canvas.off('mouse:dblclick', handleDblClick);
     };
-  }, [mode, activeClass, onHistoryUpdate]);
-
+  }, [mode, activeClass, onHistoryUpdate, fabricCanvasRef]);
+  
   return (
     <div ref={containerRef} className="canvas-container">
       <canvas ref={canvasRef} />

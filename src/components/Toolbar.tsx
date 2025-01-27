@@ -16,7 +16,7 @@ interface ToolbarProps {
   onModeChange: (mode: AnnotationMode) => void;
   onBrushSizeChange: (size: number) => void;
   onUndo: () => void;
-  onImageUpload: (file: File) => void;
+  onImageUpload: (fileOrDataUrl: string) => void;
   onExport: () => void;
   canUndo: boolean;
 }
@@ -32,10 +32,18 @@ const Toolbar: React.FC<ToolbarProps> = ({
   canUndo,
 }) => {
   const handleUpload = (info: any) => {
-    if (info.file.status === 'done') {
-      onImageUpload(info.file.originFileObj);
-    } else if (info.file.status === 'error') {
-      message.error(`${info.file.name} file upload failed.`);
+    const file = info.file.originFileObj;
+  
+    if (file) {
+      const reader = new FileReader();
+  
+      reader.onload = (e) => {
+        if (e.target?.result) {
+          onImageUpload(e.target.result as string);
+        }
+      };
+  
+      reader.readAsDataURL(file);
     }
   };
 
