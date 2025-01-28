@@ -89,61 +89,45 @@ function calculateArea(points: number[][]): number {
   return Math.abs(area) / 2;
 }
 
-export function exportToCOCO(canvas: fabric.Canvas, classes: SegmentationClass[], imageName: string): COCOFormat {
-  const objects = canvas.getObjects();
-  const imageWidth = canvas.getWidth();
-  const imageHeight = canvas.getHeight();
+export function exportToCOCO(
+  canvas: fabric.Canvas,
+  classes: SegmentationClass[],
+  imageName: string,
+  metaData: any
+): COCOFormat {
+  const imageWidth = (canvas as any).imageWidth || canvas.getWidth();
+  const imageHeight = (canvas as any).imageHeight || canvas.getHeight();
 
   const cocoData: COCOFormat = {
-    images: [{
-      id: 1,
-      file_name: imageName,
-      height: imageHeight,
-      width: imageWidth,
-    }],
+    info: {
+      description: metaData.description,
+      url: metaData.url,
+      version: metaData.version,
+      year: metaData.year,
+      contributor: metaData.contributor,
+      date_created: metaData.date_created,
+    },
+    licenses: metaData.licenses,
+    images: [
+      {
+        id: 1,
+        file_name: imageName,
+        height: imageHeight,
+        width: imageWidth,
+        license: metaData.licenses[0].id,
+        coco_url: metaData.coco_url.replace("{fileName}", imageName),
+        date_captured: metaData.date_created,
+        flickr_url: metaData.flickr_url.replace("{fileName}", imageName),
+      },
+    ],
     annotations: [],
-    categories: classes.map(cls => ({
+    categories: classes.map((cls) => ({
       id: cls.id,
       name: cls.name,
-      supercategory: 'object'
-    }))
+      supercategory: "object",
+    })),
   };
 
-  let annotationId = 1;
-
-  objects.forEach((obj: FabricObject) => {
-    // Skip the background image
-    if (obj.type === 'image') return;
-
-    const classId = classes.find(cls => cls.color === obj.fill)?.id;
-    if (!classId) return;
-
-    let segmentation: number[][];
-    if (obj.type === 'path') {
-      segmentation = getPathPoints(obj);
-    } else if (obj.type === 'polygon') {
-      segmentation = getPolygonPoints(obj);
-    } else {
-      return;
-    }
-
-    if (segmentation.length === 0) return;
-
-    const bbox = getBoundingBox(segmentation);
-    const area = calculateArea(segmentation);
-
-    const annotation: Annotation = {
-      id: annotationId++,
-      image_id: 1,
-      category_id: classId,
-      segmentation,
-      area,
-      bbox,
-      iscrowd: 0
-    };
-
-    cocoData.annotations.push(annotation);
-  });
 
   return cocoData;
 }

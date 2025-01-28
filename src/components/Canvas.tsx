@@ -165,43 +165,36 @@ const Canvas: React.FC<CanvasProps> = ({
   useEffect(() => {
     const canvas = fabricCanvasRef.current;
     if (!canvas || !currentImage) return;
-  
-    fabric.Image.fromURL(currentImage, (img: fabric.Image) => {
-      if (!img) return;
-  
-      // Clear the canvas and set background color
-      canvas.clear();
-      canvas.backgroundColor = '#f0f0f0';
-  
-      // Get canvas dimensions
-      const canvasWidth = canvas.getWidth();
-      const canvasHeight = canvas.getHeight();
-      const imgAspectRatio = img.width! / img.height!;
-      const canvasAspectRatio = canvasWidth / canvasHeight;
-  
-      let scaleX, scaleY;
-      if (imgAspectRatio > canvasAspectRatio) {
-        scaleX = (canvasWidth * 0.8) / img.width!;
-        scaleY = scaleX;
-      } else {
-        scaleY = (canvasHeight * 0.8) / img.height!;
-        scaleX = scaleY;
-      }
-  
-      // Set the image position and size
-      img.set({
-        scaleX,
-        scaleY,
-        left: (canvasWidth - img.width! * scaleX) / 2,
-        top: (canvasHeight - img.height! * scaleY) / 2,
-        selectable: false,
-        evented: false,
-      });
-  
-      canvas.setBackgroundImage(img, canvas.renderAll.bind(canvas), {
-        crossOrigin: 'anonymous', // Avoid CORS issues
-      });
-    });
+
+    fabric.Image.fromURL(
+      currentImage,
+      (img: fabric.Image) => {
+        if (!img) return;
+
+        const naturalWidth = img.width!;
+        const naturalHeight = img.height!;
+
+        canvas.clear();
+        canvas.setWidth(naturalWidth);
+        canvas.setHeight(naturalHeight);
+        img.set({
+          left: 0,
+          top: 0,
+          scaleX: 1,
+          scaleY: 1,
+          selectable: false,
+          evented: false,
+        });
+
+        canvas.setBackgroundImage(img, canvas.renderAll.bind(canvas));
+
+        (canvas as any).imageWidth = naturalWidth;
+        (canvas as any).imageHeight = naturalHeight;
+
+        canvas.renderAll();
+      },
+      { crossOrigin: 'anonymous' }
+    );
   }, [currentImage, fabricCanvasRef]);
 
   useEffect(() => {

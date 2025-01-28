@@ -33,11 +33,31 @@ const App: React.FC = () => {
   const [history, setHistory] = useState<string[]>([]);
   const [currentHistoryIndex, setCurrentHistoryIndex] = useState(-1);
   const [currentImage, setCurrentImage] = useState<string | null>(null);
+  const [currentImageName, setCurrentImageName] = useState<string | null>(null);
   const [isCompact, setIsCompact] = useState(false);
   const [drawerVisible, setDrawerVisible] = useState(false);
   const [zoom, setZoom] = useState(100);
   const [isSidebarVisible, setIsSidebarVisible] = useState(false);
   const fabricCanvasRef = useRef<any>(null);
+
+  const metaData = {
+    description: "Semantic Segmentation Dataset",
+    url: "http://example.com",
+    version: "1.0",
+    year: new Date().getFullYear(),
+    contributor: "Your Name/Organization",
+    date_created: new Date().toISOString(),
+    licenses: [
+      {
+        id: 1,
+        name: "Creative Commons Attribution 4.0 License",
+        url: "https://creativecommons.org/licenses/by/4.0/",
+      },
+    ],
+    coco_url: "http://example.com/images/{fileName}",
+    flickr_url: "http://example.com/images/{fileName}",
+  };
+  
 
   useEffect(() => {
     const checkViewport = () => {
@@ -109,7 +129,7 @@ const App: React.FC = () => {
       });
     }
   }, [currentHistoryIndex, history]);
-  
+
   const handleImageUpload = useCallback((file: File) => {
     if (!file) {
       message.error('Please select an image file');
@@ -125,7 +145,9 @@ const App: React.FC = () => {
     reader.onload = (e) => {
       const result = e.target?.result;
       if (result && typeof result === 'string') {
+        const fileName = file.name;
         setCurrentImage(result);
+        setCurrentImageName(fileName);
         setHistory([]);
         setCurrentHistoryIndex(-1);
       }
@@ -136,23 +158,28 @@ const App: React.FC = () => {
     reader.readAsDataURL(file);
   }, []);
   
-
   const handleExport = useCallback(() => {
     if (!currentImage) {
       message.error('Please upload an image first');
       return;
     }
-
-    if (classes.length === 0) {
+  
+    if (!classes.length) {
       message.error('Please create at least one class');
       return;
     }
-
+  
     if (fabricCanvasRef.current) {
-      const cocoData = exportToCOCO(fabricCanvasRef.current, classes, 'image.jpg');
+      const cocoData = exportToCOCO(
+        fabricCanvasRef.current,
+        classes,
+        currentImageName || "default_image_name.jpg",
+        metaData
+      );
       downloadJSON(cocoData, 'annotations.json');
     }
-  }, [currentImage, classes]);
+  }, [currentImage, currentImageName, classes, fabricCanvasRef]);
+  
 
   const handleZoomIn = useCallback(() => {
     setZoom(prev => Math.min(prev + 10, 200));
