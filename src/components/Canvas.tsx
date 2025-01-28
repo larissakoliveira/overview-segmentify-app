@@ -174,7 +174,6 @@ const Canvas: React.FC<CanvasProps> = ({
         const naturalWidth = img.width!;
         const naturalHeight = img.height!;
 
-        canvas.clear();
         canvas.setWidth(naturalWidth);
         canvas.setHeight(naturalHeight);
         img.set({
@@ -182,11 +181,12 @@ const Canvas: React.FC<CanvasProps> = ({
           top: 0,
           scaleX: 1,
           scaleY: 1,
-          selectable: false,
+          selectable: true,
           evented: false,
         });
 
-        canvas.setBackgroundImage(img, canvas.renderAll.bind(canvas));
+        canvas.add(img);
+        canvas.renderAll();
 
         (canvas as any).imageWidth = naturalWidth;
         (canvas as any).imageHeight = naturalHeight;

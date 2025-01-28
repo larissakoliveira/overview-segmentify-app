@@ -9,11 +9,11 @@ interface FabricObject extends fabric.Object {
 function getPathPoints(path: FabricObject): number[][] {
   const points: number[][] = [];
   const pathData = path.path;
-  
+
   if (!pathData) return points;
 
   let currentPoints: number[] = [];
-  
+
   pathData.forEach((command: any[]) => {
     if (command[0] === 'M' || command[0] === 'L') {
       currentPoints.push(command[1], command[2]);
@@ -32,7 +32,7 @@ function getPathPoints(path: FabricObject): number[][] {
 function getPolygonPoints(polygon: FabricObject): number[][] {
   const points: number[][] = [];
   const polygonPoints = polygon.points;
-  
+
   if (!polygonPoints) return points;
 
   const flatPoints = polygonPoints.reduce((acc: number[], point: { x: number; y: number }) => {
@@ -45,15 +45,10 @@ function getPolygonPoints(polygon: FabricObject): number[][] {
 }
 
 function getBoundingBox(points: number[][]): number[] {
-  if (!points.length || !points[0].length) {
-    return [0, 0, 0, 0];
-  }
+  if (!points.length || !points[0].length) return [0, 0, 0, 0];
 
   const flatPoints = points[0];
-  let minX = Infinity;
-  let minY = Infinity;
-  let maxX = -Infinity;
-  let maxY = -Infinity;
+  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
 
   for (let i = 0; i < flatPoints.length; i += 2) {
     const x = flatPoints[i];
@@ -64,15 +59,10 @@ function getBoundingBox(points: number[][]): number[] {
     maxY = Math.max(maxY, y);
   }
 
-  return [
-    minX,
-    minY,
-    maxX - minX, // width
-    maxY - minY  // height
-  ];
+  return [minX, minY, maxX - minX, maxY - minY];
 }
 
-function calculateArea(points: number[][]): number {
+function calculatePolygonArea(points: number[][]): number {
   if (!points.length || !points[0].length) return 0;
 
   const flatPoints = points[0];
@@ -115,19 +105,53 @@ export function exportToCOCO(
         height: imageHeight,
         width: imageWidth,
         license: metaData.licenses[0].id,
-        coco_url: metaData.coco_url.replace("{fileName}", imageName),
+        coco_url: metaData.coco_url.replace('{fileName}', imageName),
         date_captured: metaData.date_created,
-        flickr_url: metaData.flickr_url.replace("{fileName}", imageName),
+        flickr_url: metaData.flickr_url.replace('{fileName}', imageName),
       },
     ],
     annotations: [],
     categories: classes.map((cls) => ({
       id: cls.id,
       name: cls.name,
-      supercategory: "object",
+      supercategory: 'object',
     })),
   };
 
+  let annotationId = 1;
+
+  canvas.getObjects().forEach((obj: fabric.Object) => {
+    if (obj.type === 'image') return;
+
+    const classId = classes.find((cls) => cls.color === obj.fill || cls.color === obj.stroke)?.id;
+    if (!classId) return;
+
+    let segmentation: number[][] = [];
+    if (obj.type === 'path') {
+      segmentation = getPathPoints(obj as FabricObject);
+    } else if (obj.type === 'polygon') {
+      segmentation = getPolygonPoints(obj as FabricObject);
+    } else {
+      return;
+    }
+
+    if (segmentation.length === 0) return;
+
+    const bbox = getBoundingBox(segmentation);
+    const area = calculatePolygonArea(segmentation);
+
+    const annotation: Annotation = {
+      id: annotationId++,
+      image_id: 1,
+      category_id: classId,
+      segmentation,
+      area,
+      bbox,
+      iscrowd: 0,
+    };
+
+    cocoData.annotations.push(annotation);
+  });
 
   return cocoData;
 }

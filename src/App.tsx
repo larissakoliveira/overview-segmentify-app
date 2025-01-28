@@ -58,7 +58,6 @@ const App: React.FC = () => {
     flickr_url: "http://example.com/images/{fileName}",
   };
   
-
   useEffect(() => {
     const checkViewport = () => {
       setIsCompact(window.innerWidth <= TABLET_BREAKPOINT);
