@@ -6,7 +6,7 @@ interface CanvasProps {
   mode: AnnotationMode;
   brushSize: number;
   activeClass: SegmentationClass | null;
-  currentImage: string | null;
+  currentImage: { src: string; name: string } | null;
   onHistoryUpdate: (canvasState: string) => void;
   fabricCanvasRef: React.RefObject<fabric.Canvas | null>;
   zoom: number;
@@ -161,19 +161,18 @@ const Canvas: React.FC<CanvasProps> = ({
     canvas.zoomToPoint(new fabric.Point(center.left, center.top), zoom / 100);
   }, [zoom]);
 
-  // Handle image loading
   useEffect(() => {
     const canvas = fabricCanvasRef.current;
     if (!canvas || !currentImage) return;
-
+  
     fabric.Image.fromURL(
-      currentImage,
+      currentImage.src,
       (img: fabric.Image) => {
         if (!img) return;
-
+  
         const naturalWidth = img.width!;
         const naturalHeight = img.height!;
-
+  
         canvas.setWidth(naturalWidth);
         canvas.setHeight(naturalHeight);
         img.set({
@@ -184,19 +183,19 @@ const Canvas: React.FC<CanvasProps> = ({
           selectable: true,
           evented: false,
         });
-
+  
         canvas.add(img);
         canvas.renderAll();
-
+  
         (canvas as any).imageWidth = naturalWidth;
         (canvas as any).imageHeight = naturalHeight;
-
+  
         canvas.renderAll();
       },
       { crossOrigin: 'anonymous' }
     );
   }, [currentImage, fabricCanvasRef]);
-
+  
   useEffect(() => {
     const canvas = fabricCanvasRef.current;
     if (!canvas) return;

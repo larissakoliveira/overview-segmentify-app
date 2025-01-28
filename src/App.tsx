@@ -12,7 +12,7 @@ import {
   ZoomInOutlined,
   ZoomOutOutlined,
 } from '@ant-design/icons';
-import { AnnotationMode, SegmentationClass } from './types';
+import { AnnotationMode, COCOFormat, SegmentationClass } from './types';
 import Canvas from './components/Canvas';
 import Toolbar from './components/Toolbar';
 import ClassManager from './components/ClassManager';
@@ -32,8 +32,7 @@ const App: React.FC = () => {
   const [activeClass, setActiveClass] = useState<SegmentationClass | null>(null);
   const [history, setHistory] = useState<string[]>([]);
   const [currentHistoryIndex, setCurrentHistoryIndex] = useState(-1);
-  const [currentImage, setCurrentImage] = useState<string | null>(null);
-  const [currentImageName, setCurrentImageName] = useState<string | null>(null);
+  const [images, setImages] = useState<{ src: string; name: string }[]>([]);
   const [isCompact, setIsCompact] = useState(false);
   const [drawerVisible, setDrawerVisible] = useState(false);
   const [zoom, setZoom] = useState(100);
@@ -145,8 +144,11 @@ const App: React.FC = () => {
       const result = e.target?.result;
       if (result && typeof result === 'string') {
         const fileName = file.name;
-        setCurrentImage(result);
-        setCurrentImageName(fileName);
+  
+        setImages((prevImages) => [
+          ...prevImages,
+          { src: result, name: fileName },
+        ]);
         setHistory([]);
         setCurrentHistoryIndex(-1);
       }
@@ -155,11 +157,11 @@ const App: React.FC = () => {
       message.error('Error reading the image file');
     };
     reader.readAsDataURL(file);
-  }, []);
-  
+  }, []);  
+
   const handleExport = useCallback(() => {
-    if (!currentImage) {
-      message.error('Please upload an image first');
+    if (images.length === 0) {
+      message.error('Please upload at least one image');
       return;
     }
   
@@ -169,16 +171,50 @@ const App: React.FC = () => {
     }
   
     if (fabricCanvasRef.current) {
-      const cocoData = exportToCOCO(
-        fabricCanvasRef.current,
-        classes,
-        currentImageName || "default_image_name.jpg",
-        metaData
-      );
+      const cocoData: COCOFormat = {
+        info: metaData,
+        licenses: metaData.licenses,
+        images: [],
+        annotations: [],
+        categories: classes.map((cls) => ({
+          id: cls.id,
+          name: cls.name,
+          supercategory: 'object',
+        })),
+      };
+  
+      images.forEach((image, index) => {
+        const imageId = index + 1;
+  
+        cocoData.images.push({
+          id: imageId,
+          file_name: image.name,
+          height: fabricCanvasRef.current.imageHeight || 0,
+          width: fabricCanvasRef.current.imageWidth || 0,
+          license: metaData.licenses[0].id,
+          coco_url: metaData.coco_url.replace('{fileName}', image.name),
+          date_captured: metaData.date_created,
+          flickr_url: metaData.flickr_url.replace('{fileName}', image.name),
+        });
+  
+        const annotations = exportToCOCO(
+          fabricCanvasRef.current,
+          classes,
+          image.name,
+          metaData
+        ).annotations;
+  
+        cocoData.annotations.push(
+          ...annotations.map((annotation) => ({
+            ...annotation,
+            image_id: imageId,
+          }))
+        );
+      });
+  
       downloadJSON(cocoData, 'annotations.json');
     }
-  }, [currentImage, currentImageName, classes, fabricCanvasRef]);
-  
+  }, [images, classes, fabricCanvasRef, metaData]);
 
   const handleZoomIn = useCallback(() => {
     setZoom(prev => Math.min(prev + 10, 200));
@@ -224,7 +260,7 @@ const App: React.FC = () => {
           <Button
             icon={<DownloadOutlined />}
             onClick={handleExport}
-            disabled={!currentImage}
+            disabled={!images}
           />
         </Tooltip>
       </Space>
@@ -311,7 +347,7 @@ const App: React.FC = () => {
         <Button
           icon={<DeleteOutlined />}
           onClick={handleClearCanvas}
-          disabled={!currentImage}
+          disabled={!images}
         />
       </Tooltip>
     </Space>
@@ -361,7 +397,7 @@ const App: React.FC = () => {
               brushSize={brushSize}
               activeClass={activeClass}
               onHistoryUpdate={handleHistoryUpdate}
-              currentImage={currentImage}
+              currentImage={images.length > 0 ? images[images.length - 1] : null}
               fabricCanvasRef={fabricCanvasRef}
               zoom={zoom}
             />
