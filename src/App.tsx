@@ -310,7 +310,7 @@ const App: React.FC = () => {
         <Slider
             className="brush-size-slider"
             min={1}
-            max={50}
+            max={100}
             value={brushSize}
             onChange={setBrushSize}
           />
@@ -371,7 +371,7 @@ const App: React.FC = () => {
     <div className="app-container">
       <Header className="header">
         <div className="header-content">
-        <Button className="btn-segmentation-class" type="text" icon={visible ? <MenuFoldOutlined /> : <MenuUnfoldOutlined />} onClick={toggleSidebar} style={{ color: "#fff" }}>ADD Segmentation Class</Button>
+        <Button type="text" icon={visible ? <MenuFoldOutlined /> : <MenuUnfoldOutlined />} onClick={toggleSidebar} style={{ color: "#fff" }}>ADD Segmentation Class</Button>
         {/* </Header>
           {/* <Button
             className="menu-trigger"
