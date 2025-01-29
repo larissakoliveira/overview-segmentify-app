@@ -234,13 +234,12 @@ html, body {
 
 // Ant Design overrides
 .ant-layout {
-  background: #fff !important;
+  background: #fff;
 }
 
 .ant-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+  background-color: #532EE3;
+  color: white;
 }
 
 .ant-drawer {

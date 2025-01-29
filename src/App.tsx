@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
-import { Layout, message, Button, Drawer, Space, Tooltip, Select } from 'antd';
+import { Layout, message, Button, Drawer, Space, Tooltip, Select, Slider } from 'antd';
 import {
   MenuOutlined,
   UndoOutlined,
@@ -12,16 +12,18 @@ import {
   ZoomInOutlined,
   ZoomOutOutlined,
   ClearOutlined,
+  MenuUnfoldOutlined,
+  MenuFoldOutlined,
 } from '@ant-design/icons';
 import { AnnotationMode, COCOFormat, SegmentationClass } from './types';
 import Canvas from './components/Canvas';
-import Toolbar from './components/Toolbar';
+// import Toolbar from './components/Toolbar';
 import ClassManager from './components/ClassManager';
 import { exportToCOCO, downloadJSON } from './utils/cocoExport';
 import 'antd/dist/reset.css';
 import './styles/main.scss';
 
-const { Header, Sider, Content } = Layout;
+const { Header, Content } = Layout;
 const { Option } = Select;
 
 const TABLET_BREAKPOINT = 768;
@@ -37,7 +39,7 @@ const App: React.FC = () => {
   const [isCompact, setIsCompact] = useState(false);
   const [drawerVisible, setDrawerVisible] = useState(false);
   const [zoom, setZoom] = useState(100);
-  const [isSidebarVisible, setIsSidebarVisible] = useState(false);
+  const [visible, setVisible] = useState(true);
   const fabricCanvasRef = useRef<any>(null);
 
   const metaData = {
@@ -238,7 +240,7 @@ const App: React.FC = () => {
   }, [handleHistoryUpdate]);
 
   const toggleSidebar = () => {
-    setIsSidebarVisible(!isSidebarVisible);
+    setVisible(!visible);
   };
 
   const renderToolbar = () => (
@@ -305,16 +307,13 @@ const App: React.FC = () => {
             onClick={() => setMode('eraser')}
           />
         </Tooltip>
-        <Select
-          value={brushSize}
-          onChange={setBrushSize}
-          style={{ width: 90 }}
-          disabled={mode !== 'brush'}
-        >
-          <Option value={5}>Small</Option>
-          <Option value={10}>Medium</Option>
-          <Option value={50}>Large</Option>
-        </Select>
+        <Slider
+            className="brush-size-slider"
+            min={1}
+            max={50}
+            value={brushSize}
+            onChange={setBrushSize}
+          />
       </Space>
 
       <Space>
@@ -356,15 +355,6 @@ const App: React.FC = () => {
 
   const renderClassManager = () => (
     <div className="class-manager">
-      <div className="class-manager-header">
-        <h3>Segmentation Classes</h3>
-        {isCompact && (
-          <Button
-            icon={<MenuOutlined />}
-            onClick={() => setDrawerVisible(false)}
-          />
-        )}
-      </div>
       <div className="class-manager-content">
         <ClassManager
           classes={classes}
@@ -381,11 +371,13 @@ const App: React.FC = () => {
     <div className="app-container">
       <Header className="header">
         <div className="header-content">
-          <Button
+        <Button className="btn-segmentation-class" type="text" icon={visible ? <MenuFoldOutlined /> : <MenuUnfoldOutlined />} onClick={toggleSidebar} style={{ color: "#fff" }}>ADD Segmentation Class</Button>
+        {/* </Header>
+          {/* <Button
             className="menu-trigger"
             icon={<MenuOutlined />}
             onClick={toggleSidebar}
-          />
+          /> */} 
           {renderToolbar()}
         </div>
       </Header>
@@ -404,9 +396,16 @@ const App: React.FC = () => {
             />
           </div>
         </Content>
-        <div className={`sidebar ${isSidebarVisible ? 'visible' : ''}`}>
+        <Drawer
+        title="Segmentation Classes"
+        placement="right"
+        mask={false} 
+        closable
+        onClose={toggleSidebar}
+        open={visible}
+      >
           {renderClassManager()}
-        </div>
+          </Drawer>
       </Layout>
     </div>
   );
