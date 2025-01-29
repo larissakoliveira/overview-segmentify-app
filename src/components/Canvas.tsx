@@ -44,7 +44,6 @@ const Canvas: React.FC<CanvasProps> = ({
 
     fabricCanvasRef.current = canvas;
 
-    // Set up brush
     canvas.freeDrawingBrush = new fabric.PencilBrush(canvas);
     canvas.freeDrawingBrush.width = brushSize;
     canvas.freeDrawingBrush.color = activeClass?.color || '#000000';
@@ -222,7 +221,6 @@ const Canvas: React.FC<CanvasProps> = ({
     }
   }, [mode, brushSize, activeClass, zoom, fabricCanvasRef]);
 
-  // Handle polygon drawing
   useEffect(() => {
     const canvas = fabricCanvasRef.current;
     if (!canvas) return;
@@ -234,7 +232,6 @@ const Canvas: React.FC<CanvasProps> = ({
       polygonPoints.current.push(new fabric.Point(pointer.x, pointer.y));
   
       if (polygonPoints.current.length === 1) {
-        // Create a new polygon
         currentPolygon.current = new fabric.Polygon([...polygonPoints.current], {
           fill: activeClass.color,
           opacity: 0.5,
@@ -244,7 +241,6 @@ const Canvas: React.FC<CanvasProps> = ({
         });
         canvas.add(currentPolygon.current);
       } else if (currentPolygon.current) {
-        // Update the existing polygon
         currentPolygon.current.set({ points: [...polygonPoints.current] });
         canvas.renderAll();
       }

@@ -80,32 +80,34 @@ const ClassManager: React.FC<ClassManagerProps> = ({
             onPressEnter={handleAddClass}
             autoFocus
           />
-          <Popover
-            content={colorPicker}
-            trigger="click"
-            placement="right"
-            title="Select Class Color"
-          >
-            <Button
-              style={{
-                backgroundColor: selectedColor,
-                width: '32px',
-                height: '32px',
-                margin: '0 8px',
-                border: '2px solid #d9d9d9',
-              }}
-            />
-          </Popover>
-          <Button type="primary" onClick={handleAddClass}>
-            Add
-          </Button>
-          <Button onClick={() => {
-            setIsAdding(false);
-            setNewClassName('');
-            setSelectedColor('#FF0000');
-          }}>
-            Cancel
-          </Button>
+          <div className='add-class-form-actions'>
+            <Popover
+              content={colorPicker}
+              trigger="click"
+              placement="right"
+              title="Select Class Color"
+            >
+              <Button
+                style={{
+                  backgroundColor: selectedColor,
+                  width: '32px',
+                  height: '32px',
+                  margin: '0 8px',
+                  border: '2px solid #d9d9d9',
+                }}
+              />
+            </Popover>
+            <Button type="primary" onClick={handleAddClass}>
+              Add
+            </Button>
+            <Button onClick={() => {
+              setIsAdding(false);
+              setNewClassName('');
+              setSelectedColor('#FF0000');
+            }}>
+              Cancel
+            </Button>
+          </div>
         </div>
       )}
 

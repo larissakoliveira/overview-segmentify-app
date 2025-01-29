@@ -105,6 +105,18 @@ html, body {
     }
   }
 
+  .status-label {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    background-color: rgba(255, 255, 255, 0.9);
+    padding: 8px 16px;
+    border-radius: 4px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    font-size: 14px;
+    z-index: 1000;
+  }
+
   .sidebar {
     background: #fff;
     border-left: 1px solid #f0f0f0;
@@ -220,10 +232,11 @@ html, body {
     }
 
     .add-class-form {
-      margin-top: 16px;
-      padding-top: 16px;
-      border-top: 1px solid #f0f0f0;
-
+      .add-class-form-actions {
+        display: flex;
+        margin-top: 7px;
+        gap: 5px;
+      }
       .form-row {
         display: flex;
         gap: 8px;

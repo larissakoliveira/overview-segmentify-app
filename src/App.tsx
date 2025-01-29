@@ -227,6 +227,14 @@ const App: React.FC = () => {
     setZoom(prev => Math.max(prev - 10, 50));
   }, []);
 
+  const handleModeChange = useCallback((newMode: AnnotationMode) => {
+    if ((newMode === 'brush' || newMode === 'polygon') && !activeClass) {
+      message.warning('Please select a class before using the brush or polygon tools');
+      return;
+    }
+    setMode(newMode);
+  }, [activeClass]);
+
   const handleClearCanvas = useCallback(() => {
     if (fabricCanvasRef.current) {
       const canvas = fabricCanvasRef.current;
@@ -290,21 +298,21 @@ const App: React.FC = () => {
           <Button
             type={mode === 'brush' ? 'primary' : 'default'}
             icon={<EditOutlined />}
-            onClick={() => setMode('brush')}
+            onClick={() => handleModeChange('brush')}
           />
         </Tooltip>
         <Tooltip title="Polygon Tool">
           <Button
             type={mode === 'polygon' ? 'primary' : 'default'}
             icon={<BorderOutlined />}
-            onClick={() => setMode('polygon')}
+            onClick={() => handleModeChange('polygon')}
           />
         </Tooltip>
         <Tooltip title="Eraser">
           <Button
             type={mode === 'eraser' ? 'primary' : 'default'}
             icon={<ClearOutlined />}
-            onClick={() => setMode('eraser')}
+            onClick={() => handleModeChange('eraser')}
           />
         </Tooltip>
         <Slider
@@ -367,17 +375,21 @@ const App: React.FC = () => {
     </div>
   );
 
+  const getContrastTextColor = (hexColor: string) => {
+    const r = parseInt(hexColor.slice(1, 3), 16);
+    const g = parseInt(hexColor.slice(3, 5), 16);
+    const b = parseInt(hexColor.slice(5, 7), 16);
+    
+    const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+    
+    return brightness > 128 ? '#000000' : '#ffffff';
+  };
+
   return (
     <div className="app-container">
       <Header className="header">
         <div className="header-content">
-        <Button type="text" icon={visible ? <MenuFoldOutlined /> : <MenuUnfoldOutlined />} onClick={toggleSidebar} style={{ color: "#fff" }}>ADD Segmentation Class</Button>
-        {/* </Header>
-          {/* <Button
-            className="menu-trigger"
-            icon={<MenuOutlined />}
-            onClick={toggleSidebar}
-          /> */} 
+        <Button type="text" icon={visible ? <MenuFoldOutlined /> : <MenuUnfoldOutlined />} onClick={toggleSidebar}>ADD Class</Button>
           {renderToolbar()}
         </div>
       </Header>
@@ -394,6 +406,21 @@ const App: React.FC = () => {
               fabricCanvasRef={fabricCanvasRef}
               zoom={zoom}
             />
+          </div>
+          <div className="status-label">
+            <span>Mode: {mode.charAt(0).toUpperCase() + mode.slice(1)} | </span>
+            {activeClass && (
+              <span>
+                Class: <span style={{
+                  border: '1px solid #000000',
+                  backgroundColor: activeClass.color,
+                  color: getContrastTextColor(activeClass.color),
+                  padding: '2px 8px',
+                  borderRadius: '4px',
+                  display: 'inline-block'
+                }}>{activeClass.name}</span>
+              </span>
+            )}
           </div>
         </Content>
         <Drawer
