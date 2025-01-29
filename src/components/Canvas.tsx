@@ -27,7 +27,6 @@ const Canvas: React.FC<CanvasProps> = ({
   const polygonPoints = useRef<fabric.Point[]>([]);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Initialize canvas
   useEffect(() => {
     if (!canvasRef.current || !containerRef.current) return;
 
@@ -35,7 +34,6 @@ const Canvas: React.FC<CanvasProps> = ({
     const width = container.clientWidth;
     const height = container.clientHeight;
 
-    // Create fabric canvas
     const canvas = new fabric.Canvas(canvasRef.current, {
       isDrawingMode: mode === 'brush',
       selection: false,
@@ -51,7 +49,6 @@ const Canvas: React.FC<CanvasProps> = ({
     canvas.freeDrawingBrush.width = brushSize;
     canvas.freeDrawingBrush.color = activeClass?.color || '#000000';
 
-    // Handle window resize
     const updateCanvasSize = () => {
       if (!container) return;
 
@@ -61,7 +58,6 @@ const Canvas: React.FC<CanvasProps> = ({
       canvas.setWidth(width);
       canvas.setHeight(height);
       
-      // Scale existing objects if needed
       const objects = canvas.getObjects();
       objects.forEach(obj => {
         if (obj.type === 'image') {
@@ -152,7 +148,6 @@ const Canvas: React.FC<CanvasProps> = ({
     };
   }, []);
 
-  // Handle zoom changes
   useEffect(() => {
     const canvas = fabricCanvasRef.current;
     if (!canvas) return;
@@ -173,8 +168,8 @@ const Canvas: React.FC<CanvasProps> = ({
         const canvasWidth = canvas.getWidth();
         const canvasHeight = canvas.getHeight();
         const imgAspectRatio = img.width! / img.height!;
-        const maxWidth = canvasWidth * 0.3; // aqui rola uma limitação do tamanho máximo da imagem a 30% da largura do canvas
-        const maxHeight = canvasHeight * 0.3; // aqui também mas em relação a altura da imagem
+        const maxWidth = canvasWidth * 0.3;
+        const maxHeight = canvasHeight * 0.3;
 
         let scaleX, scaleY;
         if (imgAspectRatio > 1) {
@@ -184,8 +179,7 @@ const Canvas: React.FC<CanvasProps> = ({
           scaleY = maxHeight / img.height!;
           scaleX = scaleY;
         }
-  
-        // Define posições aleatórias para a nova imagem
+
         const randomLeft = Math.random() * (canvasWidth - img.width! * scaleX);
         const randomTop = Math.random() * (canvasHeight - img.height! * scaleY);
   
@@ -194,8 +188,8 @@ const Canvas: React.FC<CanvasProps> = ({
           top: randomTop,
           scaleX,
           scaleY,
-          selectable: true, // Permite selecionar e mover a imagem
-          evented: true,    // Permite eventos como clique e arraste
+          selectable: true,
+          evented: true,
         });
   
         canvas.add(img);
@@ -259,7 +253,6 @@ const Canvas: React.FC<CanvasProps> = ({
     const handleDblClick = () => {
       if (mode !== 'polygon' || polygonPoints.current.length < 3) return;
   
-      // Check if currentPolygon.current exists before accessing it
       if (currentPolygon.current) {
         currentPolygon.current.set({
           points: [...polygonPoints.current],
@@ -268,7 +261,6 @@ const Canvas: React.FC<CanvasProps> = ({
         });
         canvas.renderAll();
   
-        // Save to history and reset state
         onHistoryUpdate(JSON.stringify(canvas));
         currentPolygon.current = null;
         polygonPoints.current = [];
@@ -285,60 +277,6 @@ const Canvas: React.FC<CanvasProps> = ({
     };
   }, [mode, activeClass, onHistoryUpdate, fabricCanvasRef]);
 
-  // Handle polygon drawing
-useEffect(() => {
-  const canvas = fabricCanvasRef.current;
-  if (!canvas) return;
-
-  const handleMouseDown = (e: fabric.IEvent) => {
-    if (mode !== 'polygon' || !activeClass) return;
-
-    const pointer = canvas.getPointer(e.e);
-    polygonPoints.current.push(new fabric.Point(pointer.x, pointer.y));
-
-    if (polygonPoints.current.length === 1) {
-      currentPolygon.current = new fabric.Polygon([...polygonPoints.current], {
-        fill: activeClass.color,
-        opacity: 0.5,
-        selectable: false,
-        evented: false,
-        objectCaching: false,
-      });
-      canvas.add(currentPolygon.current);
-    } else if (currentPolygon.current) {
-      currentPolygon.current.set({ points: [...polygonPoints.current] });
-      canvas.renderAll();
-    }
-  };
-
-  const handleDblClick = () => {
-    if (mode !== 'polygon' || polygonPoints.current.length < 3) return;
-
-    if (currentPolygon.current) {
-      currentPolygon.current.set({
-        points: [...polygonPoints.current],
-        selectable: false,
-        evented: false,
-      });
-      canvas.renderAll();
-
-      onHistoryUpdate(JSON.stringify(canvas));
-      currentPolygon.current = null;
-      polygonPoints.current = [];
-      isDrawing.current = false;
-    }
-  };
-
-  canvas.on('mouse:down', handleMouseDown);
-  canvas.on('mouse:dblclick', handleDblClick);
-
-  return () => {
-    canvas.off('mouse:down', handleMouseDown);
-    canvas.off('mouse:dblclick', handleDblClick);
-  };
-}, [mode, activeClass, onHistoryUpdate, fabricCanvasRef]);
-
-// Add history updates for brush strokes and erasing
 useEffect(() => {
   const canvas = fabricCanvasRef.current;
   if (!canvas) return;
@@ -387,7 +325,7 @@ useEffect(() => {
     });
 
     onHistoryUpdate(JSON.stringify(canvas));
-    canvas.renderAll(); // Refresh the canvas
+    canvas.renderAll();
   };
 
   canvas.on('mouse:down', handleMouseDown);
