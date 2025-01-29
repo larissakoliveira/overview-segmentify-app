@@ -23,8 +23,9 @@ const Canvas: React.FC<CanvasProps> = ({
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const isDrawing = useRef(false);
-  const currentPolygon = useRef<fabric.Polygon | null>(null);
   const polygonPoints = useRef<fabric.Point[]>([]);
+  const firstPoint = useRef<fabric.Circle | null>(null);
+  const lines = useRef<fabric.Line[]>([]);
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -131,10 +132,93 @@ const Canvas: React.FC<CanvasProps> = ({
       }
     };
 
+    const handleCanvasClick = (e: fabric.IEvent) => {
+      if (mode !== 'polygon' || isPanning) return;
+
+      const pointer = canvas.getPointer(e.e);
+      const point = new fabric.Point(pointer.x, pointer.y);
+
+      if (firstPoint.current && polygonPoints.current.length > 2) {
+        const firstPointCoords = firstPoint.current.getCenterPoint();
+        const distance = Math.sqrt(
+          Math.pow(firstPointCoords.x - point.x, 2) + 
+          Math.pow(firstPointCoords.y - point.y, 2)
+        );
+
+        if (distance < 10) {
+          const lastLine = new fabric.Line(
+            [
+              polygonPoints.current[polygonPoints.current.length - 1].x,
+              polygonPoints.current[polygonPoints.current.length - 1].y,
+              polygonPoints.current[0].x,
+              polygonPoints.current[0].y
+            ],
+            {
+              stroke: activeClass?.color || '#000000',
+              strokeWidth: 2,
+              selectable: false,
+              evented: false
+            }
+          );
+          canvas.add(lastLine);
+          lines.current.push(lastLine);
+
+          const polygon = new fabric.Polygon(polygonPoints.current, {
+            fill: activeClass?.color ? `${activeClass.color}40` : '#00000040',
+            stroke: activeClass?.color || '#000000',
+            strokeWidth: 2,
+            selectable: false,
+            evented: false
+          });
+          canvas.add(polygon);
+
+          polygonPoints.current = [];
+          firstPoint.current = null;
+          lines.current = [];
+          canvas.renderAll();
+          return;
+        }
+      }
+
+      polygonPoints.current.push(point);
+
+      const dot = new fabric.Circle({
+        left: point.x - 4,
+        top: point.y - 4,
+        radius: 4,
+        fill: activeClass?.color || '#000000',
+        selectable: false,
+        evented: false
+      });
+      canvas.add(dot);
+
+      if (!firstPoint.current) {
+        firstPoint.current = dot;
+      }
+
+      if (polygonPoints.current.length > 1) {
+        const lastPoint = polygonPoints.current[polygonPoints.current.length - 2];
+        const line = new fabric.Line(
+          [lastPoint.x, lastPoint.y, point.x, point.y],
+          {
+            stroke: activeClass?.color || '#000000',
+            strokeWidth: 2,
+            selectable: false,
+            evented: false
+          }
+        );
+        canvas.add(line);
+        lines.current.push(line);
+      }
+
+      canvas.renderAll();
+    };
+
     document.addEventListener('keydown', handleKeyDown);
     document.addEventListener('keyup', handleKeyUp);
     canvas.on('mouse:down', handleMouseDown);
     canvas.on('mouse:move', handleMouseMove);
+    canvas.on('mouse:down', handleCanvasClick);
 
     return () => {
       window.removeEventListener('resize', updateCanvasSize);
@@ -142,10 +226,107 @@ const Canvas: React.FC<CanvasProps> = ({
       document.removeEventListener('keyup', handleKeyUp);
       canvas.off('mouse:down', handleMouseDown);
       canvas.off('mouse:move', handleMouseMove);
+      canvas.off('mouse:down', handleCanvasClick);
       canvas.dispose();
       fabricCanvasRef.current = null;
     };
   }, []);
+
+  useEffect(() => {
+    const canvas = fabricCanvasRef.current;
+    if (!canvas) return;
+  
+    const handleMouseDown = (e: fabric.IEvent) => {
+      if (mode !== 'polygon' || isDrawing.current || !activeClass) return;
+
+      const pointer = canvas.getPointer(e.e);
+      const point = new fabric.Point(pointer.x, pointer.y);
+
+      if (firstPoint.current && polygonPoints.current.length > 2) {
+        const firstPointCoords = firstPoint.current.getCenterPoint();
+        const distance = Math.sqrt(
+          Math.pow(firstPointCoords.x - point.x, 2) + 
+          Math.pow(firstPointCoords.y - point.y, 2)
+        );
+
+        if (distance < 10) { 
+          const lastLine = new fabric.Line(
+            [
+              polygonPoints.current[polygonPoints.current.length - 1].x,
+              polygonPoints.current[polygonPoints.current.length - 1].y,
+              polygonPoints.current[0].x,
+              polygonPoints.current[0].y
+            ],
+            {
+              stroke: activeClass.color,
+              strokeWidth: 2,
+              selectable: false,
+              evented: false
+            }
+          );
+          canvas.add(lastLine);
+          lines.current.push(lastLine);
+
+          const polygon = new fabric.Polygon(polygonPoints.current, {
+            fill: `${activeClass.color}40`,
+            stroke: activeClass.color,
+            strokeWidth: 2,
+            selectable: false,
+            evented: false,
+            objectCaching: false
+          });
+          canvas.add(polygon);
+
+          onHistoryUpdate(JSON.stringify(canvas));
+
+          polygonPoints.current = [];
+          firstPoint.current = null;
+          lines.current = [];
+          canvas.renderAll();
+          return;
+        }
+      }
+
+      polygonPoints.current.push(point);
+
+      const dot = new fabric.Circle({
+        left: point.x - 4,
+        top: point.y - 4,
+        radius: 4,
+        fill: activeClass.color,
+        selectable: false,
+        evented: false
+      });
+      canvas.add(dot);
+
+      if (!firstPoint.current) {
+        firstPoint.current = dot;
+      }
+
+      if (polygonPoints.current.length > 1) {
+        const lastPoint = polygonPoints.current[polygonPoints.current.length - 2];
+        const line = new fabric.Line(
+          [lastPoint.x, lastPoint.y, point.x, point.y],
+          {
+            stroke: activeClass.color,
+            strokeWidth: 2,
+            selectable: false,
+            evented: false
+          }
+        );
+        canvas.add(line);
+        lines.current.push(line);
+      }
+
+      canvas.renderAll();
+    };
+
+    canvas.on('mouse:down', handleMouseDown);
+  
+    return () => {
+      canvas.off('mouse:down', handleMouseDown);
+    };
+  }, [mode, activeClass, onHistoryUpdate, fabricCanvasRef]);
 
   useEffect(() => {
     const canvas = fabricCanvasRef.current;
@@ -225,111 +406,59 @@ const Canvas: React.FC<CanvasProps> = ({
     const canvas = fabricCanvasRef.current;
     if (!canvas) return;
   
-    const handleMouseDown = (e: fabric.IEvent) => {
-      if (mode !== 'polygon' || !activeClass) return;
-  
-      const pointer = canvas.getPointer(e.e);
-      polygonPoints.current.push(new fabric.Point(pointer.x, pointer.y));
-  
-      if (polygonPoints.current.length === 1) {
-        currentPolygon.current = new fabric.Polygon([...polygonPoints.current], {
-          fill: activeClass.color,
-          opacity: 0.5,
-          selectable: false,
-          evented: false,
-          objectCaching: false,
-        });
-        canvas.add(currentPolygon.current);
-      } else if (currentPolygon.current) {
-        currentPolygon.current.set({ points: [...polygonPoints.current] });
-        canvas.renderAll();
+    const handlePathCreated = (e: fabric.IEvent & { path?: fabric.Path }) => {
+      const path = e.path;
+      if (path) {
+        path.selectable = false;
+        path.evented = false;
       }
+      onHistoryUpdate(JSON.stringify(canvas));
     };
-  
-    const handleDblClick = () => {
-      if (mode !== 'polygon' || polygonPoints.current.length < 3) return;
-  
-      if (currentPolygon.current) {
-        currentPolygon.current.set({
-          points: [...polygonPoints.current],
-          selectable: false,
-          evented: false,
-        });
-        canvas.renderAll();
-  
+
+    const handleMouseUp = () => {
+      if (mode === 'eraser') {
         onHistoryUpdate(JSON.stringify(canvas));
-        currentPolygon.current = null;
-        polygonPoints.current = [];
-        isDrawing.current = false;
       }
     };
+
+    canvas.on('path:created', handlePathCreated);
+    canvas.on('mouse:up', handleMouseUp);
+
+    return () => {
+      canvas.off('path:created', handlePathCreated);
+      canvas.off('mouse:up', handleMouseUp);
+    };
+  }, [mode, onHistoryUpdate, fabricCanvasRef]);
+
+  useEffect(() => {
+    const canvas = fabricCanvasRef.current;
+    if (!canvas) return;
   
+    const handleMouseDown = (e: fabric.IEvent) => {
+      if (mode !== 'eraser') return;
+
+      const pointer = canvas.getPointer(e.e);
+      const point = new fabric.Point(pointer.x, pointer.y);
+
+      const objectsToRemove = canvas.getObjects().filter((obj) => {
+        if (obj.type === 'image') return false;
+        return obj.containsPoint(point);
+      });
+
+      objectsToRemove.forEach((obj) => {
+        canvas.remove(obj);
+      });
+
+      onHistoryUpdate(JSON.stringify(canvas));
+      canvas.renderAll();
+    };
+
     canvas.on('mouse:down', handleMouseDown);
-    canvas.on('mouse:dblclick', handleDblClick);
-  
+
     return () => {
       canvas.off('mouse:down', handleMouseDown);
-      canvas.off('mouse:dblclick', handleDblClick);
     };
-  }, [mode, activeClass, onHistoryUpdate, fabricCanvasRef]);
-
-useEffect(() => {
-  const canvas = fabricCanvasRef.current;
-  if (!canvas) return;
-
-  const handlePathCreated = (e: fabric.IEvent & { path?: fabric.Path }) => {
-    const path = e.path;
-    if (path) {
-      path.selectable = false;
-      path.evented = false;
-    }
-    onHistoryUpdate(JSON.stringify(canvas));
-  };
-
-  const handleMouseUp = () => {
-    if (mode === 'eraser') {
-      onHistoryUpdate(JSON.stringify(canvas));
-    }
-  };
-
-  canvas.on('path:created', handlePathCreated);
-  canvas.on('mouse:up', handleMouseUp);
-
-  return () => {
-    canvas.off('path:created', handlePathCreated);
-    canvas.off('mouse:up', handleMouseUp);
-  };
-}, [mode, onHistoryUpdate, fabricCanvasRef]);
-
-useEffect(() => {
-  const canvas = fabricCanvasRef.current;
-  if (!canvas) return;
-
-  const handleMouseDown = (e: fabric.IEvent) => {
-    if (mode !== 'eraser') return;
-
-    const pointer = canvas.getPointer(e.e);
-    const point = new fabric.Point(pointer.x, pointer.y);
-
-    const objectsToRemove = canvas.getObjects().filter((obj) => {
-      if (obj.type === 'image') return false;
-      return obj.containsPoint(point);
-    });
-
-    objectsToRemove.forEach((obj) => {
-      canvas.remove(obj);
-    });
-
-    onHistoryUpdate(JSON.stringify(canvas));
-    canvas.renderAll();
-  };
-
-  canvas.on('mouse:down', handleMouseDown);
-
-  return () => {
-    canvas.off('mouse:down', handleMouseDown);
-  };
-}, [mode, onHistoryUpdate, fabricCanvasRef]);
+  }, [mode, onHistoryUpdate, fabricCanvasRef]);
   
   return (
     <div ref={containerRef} className="canvas-container">
