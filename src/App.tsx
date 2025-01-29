@@ -11,6 +11,7 @@ import {
   DeleteOutlined,
   ZoomInOutlined,
   ZoomOutOutlined,
+  ClearOutlined,
 } from '@ant-design/icons';
 import { AnnotationMode, COCOFormat, SegmentationClass } from './types';
 import Canvas from './components/Canvas';
@@ -23,10 +24,10 @@ import './styles/main.scss';
 const { Header, Sider, Content } = Layout;
 const { Option } = Select;
 
-const TABLET_BREAKPOINT = 994;
+const TABLET_BREAKPOINT = 768;
 
 const App: React.FC = () => {
-  const [mode, setMode] = useState<AnnotationMode>('brush');
+  const [mode, setMode] = useState<AnnotationMode>('select');
   const [brushSize, setBrushSize] = useState(10);
   const [classes, setClasses] = useState<SegmentationClass[]>([]);
   const [activeClass, setActiveClass] = useState<SegmentationClass | null>(null);
@@ -101,7 +102,7 @@ const App: React.FC = () => {
   }, [currentHistoryIndex]);
 
   const handleUndo = useCallback(() => {
-    if (currentHistoryIndex > 0) {
+    if (currentHistoryIndex >= 0) {
       setCurrentHistoryIndex(prev => {
         const newIndex = prev - 1;
         if (fabricCanvasRef.current) {
@@ -300,7 +301,7 @@ const App: React.FC = () => {
         <Tooltip title="Eraser">
           <Button
             type={mode === 'eraser' ? 'primary' : 'default'}
-            icon={<DeleteOutlined />}
+            icon={<ClearOutlined />}
             onClick={() => setMode('eraser')}
           />
         </Tooltip>

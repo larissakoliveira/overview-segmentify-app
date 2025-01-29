@@ -167,29 +167,39 @@ const Canvas: React.FC<CanvasProps> = ({
   
     fabric.Image.fromURL(
       currentImage.src,
-      (img: fabric.Image) => {
+      (img) => {
         if (!img) return;
   
-        const naturalWidth = img.width!;
-        const naturalHeight = img.height!;
+        const canvasWidth = canvas.getWidth();
+        const canvasHeight = canvas.getHeight();
+        const imgAspectRatio = img.width! / img.height!;
+        const maxWidth = canvasWidth * 0.3; // aqui rola uma limitação do tamanho máximo da imagem a 30% da largura do canvas
+        const maxHeight = canvasHeight * 0.3; // aqui também mas em relação a altura da imagem
+
+        let scaleX, scaleY;
+        if (imgAspectRatio > 1) {
+          scaleX = maxWidth / img.width!;
+          scaleY = scaleX;
+        } else {
+          scaleY = maxHeight / img.height!;
+          scaleX = scaleY;
+        }
   
-        canvas.setWidth(naturalWidth);
-        canvas.setHeight(naturalHeight);
+        // Define posições aleatórias para a nova imagem
+        const randomLeft = Math.random() * (canvasWidth - img.width! * scaleX);
+        const randomTop = Math.random() * (canvasHeight - img.height! * scaleY);
+  
         img.set({
-          left: 0,
-          top: 0,
-          scaleX: 1,
-          scaleY: 1,
-          selectable: true,
-          evented: false,
+          left: randomLeft,
+          top: randomTop,
+          scaleX,
+          scaleY,
+          selectable: true, // Permite selecionar e mover a imagem
+          evented: true,    // Permite eventos como clique e arraste
         });
   
         canvas.add(img);
-        canvas.renderAll();
-  
-        (canvas as any).imageWidth = naturalWidth;
-        (canvas as any).imageHeight = naturalHeight;
-  
+        canvas.isDrawingMode = false;
         canvas.renderAll();
       },
       { crossOrigin: 'anonymous' }
@@ -201,7 +211,7 @@ const Canvas: React.FC<CanvasProps> = ({
     if (!canvas) return;
   
     canvas.isDrawingMode = mode === 'brush';
-    canvas.selection = false;
+    canvas.selection = mode !== 'brush';
   
     const brush = canvas.freeDrawingBrush as fabric.PencilBrush;
     if (brush) {
@@ -214,7 +224,7 @@ const Canvas: React.FC<CanvasProps> = ({
     } else if (mode === 'pan') {
       canvas.defaultCursor = 'grab';
     } else {
-      canvas.defaultCursor = 'crosshair';
+      canvas.defaultCursor = 'default';
     }
   }, [mode, brushSize, activeClass, zoom, fabricCanvasRef]);
 

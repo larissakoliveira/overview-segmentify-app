@@ -46,7 +46,7 @@ export interface COCOFormat {
   }[];
 }
 
-export type AnnotationMode = 'brush' | 'polygon' | 'eraser' | 'pan';
+export type AnnotationMode = 'brush' | 'polygon' | 'eraser' | 'pan' | 'select';
 
 export interface CanvasState {
   mode: AnnotationMode;

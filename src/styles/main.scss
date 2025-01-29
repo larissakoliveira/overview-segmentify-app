@@ -4,28 +4,26 @@ $border-color: #f0f0f0;
 $text-color: #333;
 $sidebar-width: 300px;
 $header-height: 64px;
-$mobile-breakpoint: 768px;
-$tablet-breakpoint: 994px;
 
 // Breakpoints
-$mobile: 768px;
-$tablet: 1024px;
+$mobile: 320px;
+$tablet: 768px;
 
 // Mixins
 @mixin mobile {
-  @media (max-width: #{$mobile-breakpoint}) {
+  @media (max-width: #{$mobile}) {
     @content;
   }
 }
 
 @mixin tablet {
-  @media (min-width: #{$mobile-breakpoint + 1}) and (max-width: #{$tablet-breakpoint}) {
+  @media (min-width: #{$mobile + 1}) and (max-width: #{$tablet}) {
     @content;
   }
 }
 
 @mixin mobile-tablet {
-  @media (max-width: #{$tablet-breakpoint}) {
+  @media (max-width: #{$tablet}) {
     @content;
   }
 }
