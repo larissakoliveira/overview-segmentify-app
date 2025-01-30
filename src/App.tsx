@@ -10,6 +10,7 @@ import {
   ZoomInOutlined,
   ZoomOutOutlined,
   ClearOutlined,
+  MenuOutlined,
 } from '@ant-design/icons';
 import { AnnotationMode, COCOFormat, SegmentationClass } from './types';
 import Canvas from './components/Canvas';
@@ -36,8 +37,8 @@ const App = () => {
   const [drawerVisible, setDrawerVisible] = useState(false);
   const [zoom, setZoom] = useState(100);
   const [visible, setVisible] = useState(false);
+  const [mobileMenuVisible, setMobileMenuVisible] = useState(false);
   const fabricCanvasRef = useRef<any>(null);
-
 
   useEffect(() => {
     const checkViewport = () => {
@@ -95,7 +96,7 @@ const App = () => {
       });
     }
   }, [currentHistoryIndex, history]);
-  
+
   const handleRedo = useCallback(() => {
     if (currentHistoryIndex < history.length - 1) {
       setCurrentHistoryIndex(prev => {
@@ -115,18 +116,18 @@ const App = () => {
       message.error('Please select an image file');
       return;
     }
-  
+
     if (!file.type.startsWith('image/')) {
       message.error('Please upload an image file');
       return;
     }
-  
+
     const reader = new FileReader();
     reader.onload = (e) => {
       const result = e.target?.result;
       if (result && typeof result === 'string') {
         const fileName = file.name;
-        
+
         const img = new Image();
         img.onload = () => {
           setImages((prevImages) => [
@@ -140,7 +141,7 @@ const App = () => {
           ]);
         };
         img.src = result;
-        
+
         setHistory([]);
         setCurrentHistoryIndex(-1);
       }
@@ -156,12 +157,12 @@ const App = () => {
       message.error('Please upload at least one image');
       return;
     }
-  
+
     if (!classes.length) {
       message.error('Please create at least one class');
       return;
     }
-  
+
     if (fabricCanvasRef.current) {
       const cocoData: COCOFormat = {
         info: appMetadata,
@@ -174,10 +175,10 @@ const App = () => {
           supercategory: 'object',
         })),
       };
-  
+
       images.forEach((image, index) => {
         const imageId = index + 1;
-  
+
         cocoData.images.push({
           id: imageId,
           file_name: image.name,
@@ -188,14 +189,14 @@ const App = () => {
           date_captured: appMetadata.date_created,
           flickr_url: appMetadata.flickr_url.replace('{fileName}', image.name),
         });
-  
+
         const annotations = exportToCOCO(
           fabricCanvasRef.current,
           classes,
           image.name,
           appMetadata
         ).annotations;
-  
+
         cocoData.annotations.push(
           ...annotations.map((annotation) => ({
             ...annotation,
@@ -203,7 +204,7 @@ const App = () => {
           }))
         );
       });
-  
+
       downloadJSON(cocoData, 'annotations.json');
     }
   }, [images, classes, fabricCanvasRef, appMetadata]);
@@ -228,104 +229,134 @@ const App = () => {
     setVisible(!visible);
   };
 
-  const renderToolbar = () => (
-    <Space className="toolbar">
-       <Space>
-        <Tooltip title="Upload Image">
-          <Button
-            icon={<UploadOutlined />}
-            onClick={() => document.getElementById('image-upload')?.click()}
-          />
-          <input
-            id="image-upload"
-            type="file"
-            accept="image/*"
-            style={{ display: 'none' }}
-            onChange={(e) => e.target.files && handleImageUpload(e.target.files[0])}
-          />
-        </Tooltip>
-        <Tooltip title="Export Annotations">
-          <Button
-            icon={<DownloadOutlined />}
-            onClick={handleExport}
-            disabled={!images}
-          />
-        </Tooltip>
-      </Space>
-      <Space>
-        <Tooltip title="Polygon Tool">
-          <Button
-            type={mode === 'polygon' ? 'primary' : 'default'}
-            icon={<BorderOutlined />}
-            onClick={() => handleModeChange('polygon')}
-          />
-        </Tooltip>
-        <Tooltip title="Brush Tool">
-          <Button
-            type={mode === 'brush' ? 'primary' : 'default'}
-            icon={<EditOutlined />}
-            onClick={() => handleModeChange('brush')}
-          />
-        </Tooltip>
-        <Slider
+  const toggleMobileMenu = () => {
+    setMobileMenuVisible(!mobileMenuVisible);
+  };
+
+  const renderToolbar = () => {
+    const toolbarContent = (
+      <Space direction={isCompact ? 'vertical' : 'horizontal'} size="middle">
+        <Space>
+          <Tooltip title="Upload Image">
+            <Button
+              icon={<UploadOutlined />}
+              onClick={() => document.getElementById('image-upload')?.click()}
+            />
+            <input
+              id="image-upload"
+              type="file"
+              accept="image/*"
+              style={{ display: 'none' }}
+              onChange={(e) => e.target.files && handleImageUpload(e.target.files[0])}
+            />
+          </Tooltip>
+          <Tooltip title="Export Annotations">
+            <Button
+              icon={<DownloadOutlined />}
+              onClick={handleExport}
+              disabled={!images}
+            />
+          </Tooltip>
+        </Space>
+        <Space>
+          <Tooltip title="Polygon Tool">
+            <Button
+              type={mode === 'polygon' ? 'primary' : 'default'}
+              icon={<BorderOutlined />}
+              onClick={() => handleModeChange('polygon')}
+            />
+          </Tooltip>
+          <Tooltip title="Brush Tool">
+            <Button
+              type={mode === 'brush' ? 'primary' : 'default'}
+              icon={<EditOutlined />}
+              onClick={() => handleModeChange('brush')}
+            />
+          </Tooltip>
+          <Slider
             className="brush-size-slider"
             min={1}
             max={100}
             value={brushSize}
             onChange={setBrushSize}
           />
+        </Space>
+        <Space>
+          <Tooltip title="Eraser">
+            <Button
+              type={mode === 'eraser' ? 'primary' : 'default'}
+              icon={<ClearOutlined />}
+              onClick={() => handleModeChange('eraser')}
+            />
+          </Tooltip>
+          <Tooltip title="Undo">
+            <Button
+              icon={<UndoOutlined />}
+              onClick={handleUndo}
+              disabled={currentHistoryIndex <= 0}
+            />
+          </Tooltip>
+          <Tooltip title="Redo">
+            <Button
+              icon={<RedoOutlined />}
+              onClick={handleRedo}
+              disabled={currentHistoryIndex >= history.length - 1}
+            />
+          </Tooltip>
+        </Space>
+        <Space>
+          <Tooltip title="Zoom Out">
+            <Button
+              icon={<ZoomOutOutlined />}
+              onClick={handleZoomOut}
+              disabled={zoom <= 50}
+            />
+          </Tooltip>
+          <Select
+            value={zoom}
+            onChange={setZoom}
+            style={{ width: 80 }}
+          >
+            <Option value={50}>50%</Option>
+            <Option value={100}>100%</Option>
+            <Option value={150}>150%</Option>
+            <Option value={200}>200%</Option>
+          </Select>
+          <Tooltip title="Zoom In">
+            <Button
+              icon={<ZoomInOutlined />}
+              onClick={handleZoomIn}
+              disabled={zoom >= 200}
+            />
+          </Tooltip>
+        </Space>
       </Space>
-      <Space>
-        <Tooltip title="Eraser">
-          <Button
-            type={mode === 'eraser' ? 'primary' : 'default'}
-            icon={<ClearOutlined />}
-            onClick={() => handleModeChange('eraser')}
+    );
+
+    if (isCompact) {
+      return (
+        <>
+          <Button 
+            type="text"
+            icon={<MenuOutlined />}
+            onClick={toggleMobileMenu}
+            className="mobile-menu-trigger"
           />
-        </Tooltip>
-        <Tooltip title="Undo">
-          <Button
-            icon={<UndoOutlined />}
-            onClick={handleUndo}
-            disabled={currentHistoryIndex <= 0}
-          />
-        </Tooltip>
-        <Tooltip title="Redo">
-          <Button
-            icon={<RedoOutlined />}
-            onClick={handleRedo}
-            disabled={currentHistoryIndex >= history.length - 1}
-          />
-        </Tooltip>
-      </Space>
-      <Space>
-        <Tooltip title="Zoom Out">
-          <Button
-            icon={<ZoomOutOutlined />}
-            onClick={handleZoomOut}
-            disabled={zoom <= 50}
-          />
-        </Tooltip>
-        <Select
-          value={zoom}
-          onChange={setZoom}
-          style={{ width: 80 }}
-        >
-          <Option value={50}>50%</Option>
-          <Option value={100}>100%</Option>
-          <Option value={150}>150%</Option>
-          <Option value={200}>200%</Option>
-        </Select>
-        <Tooltip title="Zoom In">
-          <Button
-            icon={<ZoomInOutlined />}
-            onClick={handleZoomIn}
-            disabled={zoom >= 200}
-          />
-        </Tooltip>
-      </Space>
-    </Space>
-  );
+          <Drawer
+            title="Tools"
+            placement="left"
+            onClose={toggleMobileMenu}
+            open={mobileMenuVisible}
+            width={300}
+          >
+            {toolbarContent}
+          </Drawer>
+        </>
+      );
+    }
+
+    return toolbarContent;
+  };
 
   const renderClassManager = () => (
     <div className="class-manager">
@@ -355,8 +386,17 @@ const App = () => {
     <div className="app-container">
       <Header className="header">
         <div className="header-content">
-        <Button type="text" onClick={toggleSidebar}>Select Class</Button>
-          {renderToolbar()}
+          {isCompact ? (
+            <>
+              <Button type="text" onClick={toggleSidebar}>Select Class</Button>
+              {renderToolbar()}
+            </>
+          ) : (
+            <>
+              <Button type="text" onClick={toggleSidebar}>Select Class</Button>
+              {renderToolbar()}
+            </>
+          )}
         </div>
       </Header>
 
@@ -390,15 +430,15 @@ const App = () => {
           </div>
         </Content>
         <Drawer
-        title="Segmentation Classes"
-        placement="right"
-        mask={false} 
-        closable
-        onClose={toggleSidebar}
-        open={visible}
-      >
+          title="Segmentation Classes"
+          placement="right"
+          mask={false} 
+          closable
+          onClose={toggleSidebar}
+          open={visible}
+        >
           {renderClassManager()}
-          </Drawer>
+        </Drawer>
       </Layout>
     </div>
   );
