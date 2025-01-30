@@ -15,6 +15,7 @@ import { AnnotationMode, COCOFormat, SegmentationClass } from './types';
 import Canvas from './components/Canvas';
 import ClassManager from './components/ClassManager';
 import { exportToCOCO, downloadJSON } from './utils/cocoExport';
+import { appMetadata } from './config/metadata';
 import 'antd/dist/reset.css';
 import './styles/main.scss';
 
@@ -38,24 +39,6 @@ const App = () => {
   const fabricCanvasRef = useRef<any>(null);
 
 
-  const memoizedMetaData = useMemo(() => ({
-    description: "Semantic Segmentation Dataset",
-    url: "http://example.com",
-    version: "1.0",
-    year: new Date().getFullYear(),
-    contributor: "Your Name/Organization",
-    date_created: new Date().toISOString(),
-    licenses: [
-      {
-        id: 1,
-        name: "Creative Commons Attribution 4.0 License",
-        url: "https://creativecommons.org/licenses/by/4.0/",
-      },
-    ],
-    coco_url: "http://example.com/images/{fileName}",
-    flickr_url: "http://example.com/images/{fileName}",
-  }), []);  
-  
   useEffect(() => {
     const checkViewport = () => {
       setIsCompact(window.innerWidth <= TABLET_BREAKPOINT);
@@ -181,8 +164,8 @@ const App = () => {
   
     if (fabricCanvasRef.current) {
       const cocoData: COCOFormat = {
-        info: memoizedMetaData,
-        licenses: memoizedMetaData.licenses,
+        info: appMetadata,
+        licenses: appMetadata.licenses,
         images: [],
         annotations: [],
         categories: classes.map((cls) => ({
@@ -200,17 +183,17 @@ const App = () => {
           file_name: image.name,
           height: image.height || 0,
           width: image.width || 0,
-          license: memoizedMetaData.licenses[0].id,
-          coco_url: memoizedMetaData.coco_url.replace('{fileName}', image.name),
-          date_captured: memoizedMetaData.date_created,
-          flickr_url: memoizedMetaData.flickr_url.replace('{fileName}', image.name),
+          license: appMetadata.licenses[0].id,
+          coco_url: appMetadata.coco_url.replace('{fileName}', image.name),
+          date_captured: appMetadata.date_created,
+          flickr_url: appMetadata.flickr_url.replace('{fileName}', image.name),
         });
   
         const annotations = exportToCOCO(
           fabricCanvasRef.current,
           classes,
           image.name,
-          memoizedMetaData
+          appMetadata
         ).annotations;
   
         cocoData.annotations.push(
@@ -223,7 +206,7 @@ const App = () => {
   
       downloadJSON(cocoData, 'annotations.json');
     }
-  }, [images, classes, fabricCanvasRef, memoizedMetaData]);
+  }, [images, classes, fabricCanvasRef, appMetadata]);
 
   const handleZoomIn = useCallback(() => {
     setZoom(prev => Math.min(prev + 10, 200));
@@ -247,6 +230,28 @@ const App = () => {
 
   const renderToolbar = () => (
     <Space className="toolbar">
+       <Space>
+        <Tooltip title="Upload Image">
+          <Button
+            icon={<UploadOutlined />}
+            onClick={() => document.getElementById('image-upload')?.click()}
+          />
+          <input
+            id="image-upload"
+            type="file"
+            accept="image/*"
+            style={{ display: 'none' }}
+            onChange={(e) => e.target.files && handleImageUpload(e.target.files[0])}
+          />
+        </Tooltip>
+        <Tooltip title="Export Annotations">
+          <Button
+            icon={<DownloadOutlined />}
+            onClick={handleExport}
+            disabled={!images}
+          />
+        </Tooltip>
+      </Space>
       <Space>
         <Tooltip title="Polygon Tool">
           <Button
@@ -293,8 +298,6 @@ const App = () => {
           />
         </Tooltip>
       </Space>
-
-
       <Space>
         <Tooltip title="Zoom Out">
           <Button
@@ -318,28 +321,6 @@ const App = () => {
             icon={<ZoomInOutlined />}
             onClick={handleZoomIn}
             disabled={zoom >= 200}
-          />
-        </Tooltip>
-      </Space>
-      <Space>
-        <Tooltip title="Upload Image">
-          <Button
-            icon={<UploadOutlined />}
-            onClick={() => document.getElementById('image-upload')?.click()}
-          />
-          <input
-            id="image-upload"
-            type="file"
-            accept="image/*"
-            style={{ display: 'none' }}
-            onChange={(e) => e.target.files && handleImageUpload(e.target.files[0])}
-          />
-        </Tooltip>
-        <Tooltip title="Export Annotations">
-          <Button
-            icon={<DownloadOutlined />}
-            onClick={handleExport}
-            disabled={!images}
           />
         </Tooltip>
       </Space>

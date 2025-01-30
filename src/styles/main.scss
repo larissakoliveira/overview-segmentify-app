@@ -14,7 +14,7 @@ $tablet: 768px;
 }
 
 @mixin tablet {
-  @media (min-width: #{$mobile + 1}) and (max-width: #{$tablet}) {
+  @media (max-width: #{$tablet}) {
     @content;
   }
 }
@@ -54,7 +54,7 @@ html, body {
 
       .menu-trigger {
         display: none;
-        @media (max-width: $mobile) {
+        @include mobile {
           display: block;
         }
       }
@@ -66,7 +66,7 @@ html, body {
       gap: 12px;
       flex-wrap: wrap;
 
-      @media (max-width: $mobile) {
+      @include mobile {
         gap: 12px;
         .ant-space {
           flex-wrap: wrap;
@@ -74,7 +74,7 @@ html, body {
       }
     }
 
-    @media (max-width: $mobile) {
+    @include mobile {
       .ant-space {
         gap: 8px !important;
       }
@@ -124,11 +124,11 @@ html, body {
     padding: 0;
     width: 300px;
 
-    @media (max-width: $tablet) {
+    @include tablet {
       width: 250px;
     }
 
-    @media (max-width: $mobile) {
+    @include mobile {
       position: fixed;
       top: 64px;
       right: 0;
@@ -276,7 +276,7 @@ html, body {
 }
 
 // Mobile-specific styles
-@media (max-width: $mobile) {
+@include mobile {
   .ant-btn {
     padding: 4px 8px;
     font-size: 14px;
