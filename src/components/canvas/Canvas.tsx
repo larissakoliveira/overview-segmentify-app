@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { fabric } from 'fabric';
-import { CanvasProps } from '../types';
-import { useImageHandler } from '../hooks/useImageHandler';
+import { CanvasProps } from '../../types';
+import { useImageHandler } from '../../hooks/useImageHandler';
 
 const Canvas = ({
   mode,

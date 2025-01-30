@@ -11,6 +11,14 @@ export interface CanvasProps {
   zoom: number;
 }
 
+export interface CanvasState {
+  mode: AnnotationMode;
+  brushSize: number;
+  activeClass: SegmentationClass | null;
+  history: string[];
+  currentHistoryIndex: number;
+}
+
 export interface ClassManagerProps {
   classes: SegmentationClass[];
   activeClass: SegmentationClass | null;
@@ -77,16 +85,6 @@ export type AnnotationMode = 'brush' | 'polygon' | 'eraser' | 'pan' | 'select';
 export interface ImageHandlerProps {
   fabricCanvasRef: RefObject<fabric.Canvas | null>;
   currentImage: { src: string; name: string } | null;
-}
-
-export type AnnotationMode = 'brush' | 'polygon' | 'eraser' | 'pan' | 'select';
-
-export interface CanvasState {
-  mode: AnnotationMode;
-  brushSize: number;
-  activeClass: SegmentationClass | null;
-  history: string[];
-  currentHistoryIndex: number;
 }
 
 declare module 'fabric/fabric-impl' {

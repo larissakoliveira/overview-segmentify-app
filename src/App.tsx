@@ -4,9 +4,9 @@ import {
   MenuOutlined,
 } from '@ant-design/icons';
 import { AnnotationMode, COCOFormat, SegmentationClass } from './types';
-import Canvas from './components/Canvas';
-import ClassManager from './components/ClassManager';
-import Toolbar from './components/Toolbar';
+import Canvas from './components/canvas/Canvas';
+import ClassManager from './components/classManager/ClassManager';
+import Toolbar from './components/toolbar/Toolbar';
 import { exportToCOCO, downloadJSON } from './utils/cocoExport';
 import { appMetadata } from './config/metadata';
 import 'antd/dist/reset.css';

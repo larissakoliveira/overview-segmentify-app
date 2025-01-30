@@ -10,7 +10,7 @@ import {
   ZoomInOutlined,
   ZoomOutOutlined,
 } from '@ant-design/icons';
-import { AnnotationMode, SegmentationClass } from '../types';
+import { AnnotationMode, SegmentationClass } from '../../types';
 
 const { Option } = Select;
 

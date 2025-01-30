@@ -2,7 +2,7 @@ import { useCallback, useMemo, useState } from 'react';
 import { Button, Input, List, Popover, message } from 'antd';
 import { ChromePicker, ColorResult } from 'react-color';
 import { DeleteOutlined, PlusOutlined } from '@ant-design/icons';
-import { ClassManagerProps } from '../types';
+import { ClassManagerProps } from '../../types';
 
 const DEFAULT_COLOR = '#FF0000';
 
