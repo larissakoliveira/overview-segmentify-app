@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Button, Input, List, Popover, message } from 'antd';
 import { ChromePicker, ColorResult } from 'react-color';
 import { DeleteOutlined, PlusOutlined } from '@ant-design/icons';
@@ -12,13 +12,13 @@ interface ClassManagerProps {
   onSelectClass: (classId: number) => void;
 }
 
-const ClassManager: React.FC<ClassManagerProps> = ({
+const ClassManager = ({
   classes,
   activeClass,
   onAddClass,
   onDeleteClass,
   onSelectClass,
-}) => {
+}: ClassManagerProps) => {
   const [isAdding, setIsAdding] = useState(false);
   const [newClassName, setNewClassName] = useState('');
   const [selectedColor, setSelectedColor] = useState('#FF0000');

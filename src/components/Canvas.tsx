@@ -1,18 +1,8 @@
-import React, { useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { fabric } from 'fabric';
-import { AnnotationMode, SegmentationClass } from '../types';
+import { CanvasProps } from '../types';
 
-interface CanvasProps {
-  mode: AnnotationMode;
-  brushSize: number;
-  activeClass: SegmentationClass | null;
-  currentImage: { src: string; name: string } | null;
-  onHistoryUpdate: (canvasState: string) => void;
-  fabricCanvasRef: React.RefObject<fabric.Canvas | null>;
-  zoom: number;
-}
-
-const Canvas: React.FC<CanvasProps> = ({
+const Canvas = ({
   mode,
   brushSize,
   activeClass,
@@ -20,7 +10,7 @@ const Canvas: React.FC<CanvasProps> = ({
   onHistoryUpdate,
   fabricCanvasRef,
   zoom,
-}) => {
+}: CanvasProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const isDrawing = useRef(false);
   const polygonPoints = useRef<fabric.Point[]>([]);
@@ -334,7 +324,7 @@ const Canvas: React.FC<CanvasProps> = ({
 
     const center = canvas.getCenter();
     canvas.zoomToPoint(new fabric.Point(center.left, center.top), zoom / 100);
-  }, [zoom]);
+  }, [zoom, fabricCanvasRef]);  // verificar a utilidade lorena
 
   useEffect(() => {
     const canvas = fabricCanvasRef.current;

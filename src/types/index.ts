@@ -1,3 +1,13 @@
+export interface CanvasProps {
+  mode: AnnotationMode;
+  brushSize: number;
+  activeClass: SegmentationClass | null;
+  currentImage: { src: string; name: string } | null;
+  onHistoryUpdate: (canvasState: string) => void;
+  fabricCanvasRef: React.RefObject<fabric.Canvas | null>;
+  zoom: number;
+}
+
 export interface SegmentationClass {
   id: number;
   name: string;

@@ -1,19 +1,15 @@
-import React, { useState, useCallback, useEffect, useRef } from 'react';
+import React, { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import { Layout, message, Button, Drawer, Space, Tooltip, Select, Slider } from 'antd';
 import {
-  MenuOutlined,
   UndoOutlined,
   RedoOutlined,
   DownloadOutlined,
   UploadOutlined,
   EditOutlined,
   BorderOutlined,
-  DeleteOutlined,
   ZoomInOutlined,
   ZoomOutOutlined,
   ClearOutlined,
-  MenuUnfoldOutlined,
-  MenuFoldOutlined,
 } from '@ant-design/icons';
 import { AnnotationMode, COCOFormat, SegmentationClass } from './types';
 import Canvas from './components/Canvas';
@@ -28,7 +24,7 @@ const { Option } = Select;
 
 const TABLET_BREAKPOINT = 768;
 
-const App: React.FC = () => {
+const App = () => {
   const [mode, setMode] = useState<AnnotationMode>('select');
   const [brushSize, setBrushSize] = useState(10);
   const [classes, setClasses] = useState<SegmentationClass[]>([]);
@@ -39,10 +35,11 @@ const App: React.FC = () => {
   const [isCompact, setIsCompact] = useState(false);
   const [drawerVisible, setDrawerVisible] = useState(false);
   const [zoom, setZoom] = useState(100);
-  const [visible, setVisible] = useState(true);
+  const [visible, setVisible] = useState(false);
   const fabricCanvasRef = useRef<any>(null);
 
-  const metaData = {
+
+  const memoizedMetaData = useMemo(() => ({
     description: "Semantic Segmentation Dataset",
     url: "http://example.com",
     version: "1.0",
@@ -58,7 +55,7 @@ const App: React.FC = () => {
     ],
     coco_url: "http://example.com/images/{fileName}",
     flickr_url: "http://example.com/images/{fileName}",
-  };
+  }), []);  
   
   useEffect(() => {
     const checkViewport = () => {
@@ -175,8 +172,8 @@ const App: React.FC = () => {
   
     if (fabricCanvasRef.current) {
       const cocoData: COCOFormat = {
-        info: metaData,
-        licenses: metaData.licenses,
+        info: memoizedMetaData,
+        licenses: memoizedMetaData.licenses,
         images: [],
         annotations: [],
         categories: classes.map((cls) => ({
@@ -194,17 +191,17 @@ const App: React.FC = () => {
           file_name: image.name,
           height: fabricCanvasRef.current.imageHeight || 0,
           width: fabricCanvasRef.current.imageWidth || 0,
-          license: metaData.licenses[0].id,
-          coco_url: metaData.coco_url.replace('{fileName}', image.name),
-          date_captured: metaData.date_created,
-          flickr_url: metaData.flickr_url.replace('{fileName}', image.name),
+          license: memoizedMetaData.licenses[0].id,
+          coco_url: memoizedMetaData.coco_url.replace('{fileName}', image.name),
+          date_captured: memoizedMetaData.date_created,
+          flickr_url: memoizedMetaData.flickr_url.replace('{fileName}', image.name),
         });
   
         const annotations = exportToCOCO(
           fabricCanvasRef.current,
           classes,
           image.name,
-          metaData
+          memoizedMetaData
         ).annotations;
   
         cocoData.annotations.push(
@@ -217,7 +214,7 @@ const App: React.FC = () => {
   
       downloadJSON(cocoData, 'annotations.json');
     }
-  }, [images, classes, fabricCanvasRef, metaData]);
+  }, [images, classes, fabricCanvasRef, memoizedMetaData]);
 
   const handleZoomIn = useCallback(() => {
     setZoom(prev => Math.min(prev + 10, 200));
@@ -234,18 +231,6 @@ const App: React.FC = () => {
     }
     setMode(newMode);
   }, [activeClass]);
-
-  const handleClearCanvas = useCallback(() => {
-    if (fabricCanvasRef.current) {
-      const canvas = fabricCanvasRef.current;
-      const backgroundImage = canvas.backgroundImage;
-      canvas.clear();
-      if (backgroundImage) {
-        canvas.setBackgroundImage(backgroundImage, canvas.renderAll.bind(canvas));
-      }
-      handleHistoryUpdate(JSON.stringify(canvas));
-    }
-  }, [handleHistoryUpdate]);
 
   const toggleSidebar = () => {
     setVisible(!visible);
@@ -350,14 +335,6 @@ const App: React.FC = () => {
           <Option value={200}>200%</Option>
         </Select>
       </Space>
-
-      <Tooltip title="Clear Canvas">
-        <Button
-          icon={<DeleteOutlined />}
-          onClick={handleClearCanvas}
-          disabled={!images}
-        />
-      </Tooltip>
     </Space>
   );
 
@@ -389,7 +366,7 @@ const App: React.FC = () => {
     <div className="app-container">
       <Header className="header">
         <div className="header-content">
-        <Button type="text" icon={visible ? <MenuFoldOutlined /> : <MenuUnfoldOutlined />} onClick={toggleSidebar}>ADD Class</Button>
+        <Button type="text" onClick={toggleSidebar}>Select Class</Button>
           {renderToolbar()}
         </div>
       </Header>
