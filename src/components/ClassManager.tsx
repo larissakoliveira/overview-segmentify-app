@@ -1,16 +1,10 @@
-import { useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { Button, Input, List, Popover, message } from 'antd';
 import { ChromePicker, ColorResult } from 'react-color';
 import { DeleteOutlined, PlusOutlined } from '@ant-design/icons';
-import { SegmentationClass } from '../types';
+import { ClassManagerProps } from '../types';
 
-interface ClassManagerProps {
-  classes: SegmentationClass[];
-  activeClass: SegmentationClass | null;
-  onAddClass: (className: string, color: string) => void;
-  onDeleteClass: (classId: number) => void;
-  onSelectClass: (classId: number) => void;
-}
+const DEFAULT_COLOR = '#FF0000';
 
 const ClassManager = ({
   classes,
@@ -21,9 +15,16 @@ const ClassManager = ({
 }: ClassManagerProps) => {
   const [isAdding, setIsAdding] = useState(false);
   const [newClassName, setNewClassName] = useState('');
-  const [selectedColor, setSelectedColor] = useState('#FF0000');
+  const [selectedColor, setSelectedColor] = useState(DEFAULT_COLOR);
 
-  const handleAddClass = () => {
+  const resetForm = useCallback(() => {
+    setIsAdding(false);
+    setNewClassName('');
+    setSelectedColor(DEFAULT_COLOR);
+  }, []);
+
+  const handleAddClass = useCallback(() => {
+    const trimmedName = newClassName.trim();
     if (!newClassName.trim()) {
       message.error('Please enter a class name');
       return;
@@ -39,28 +40,28 @@ const ClassManager = ({
       return;
     }
 
-    onAddClass(newClassName.trim(), selectedColor);
-    setNewClassName('');
-    setSelectedColor('#FF0000');
-    setIsAdding(false);
-  };
+    onAddClass(trimmedName, selectedColor);
+    resetForm();
+  }, [newClassName, selectedColor, classes, resetForm]);
 
-  const handleDeleteClass = (classId: number, e: React.MouseEvent) => {
+  const handleDeleteClass = useCallback( (classId: number, e: React.MouseEvent) => {
     e.stopPropagation();
     onDeleteClass(classId);
-  };
+  },
+  [onDeleteClass]
+  );
 
-  const colorPicker = (
+  const colorPicker = useMemo(() => (
     <ChromePicker
       color={selectedColor}
       onChange={(color: ColorResult) => setSelectedColor(color.hex)}
       disableAlpha={true}
     />
-  );
+  ), [selectedColor]);
 
   return (
     <div className="class-manager">
-      {!isAdding && (
+      {!isAdding ? (
         <Button
           type="primary"
           icon={<PlusOutlined />}
@@ -69,9 +70,7 @@ const ClassManager = ({
         >
           Add New Class
         </Button>
-      )}
-
-      {isAdding && (
+      ) : (
         <div className="add-class-form">
           <Input
             placeholder="Enter class name"
@@ -100,11 +99,7 @@ const ClassManager = ({
             <Button type="primary" onClick={handleAddClass}>
               Add
             </Button>
-            <Button onClick={() => {
-              setIsAdding(false);
-              setNewClassName('');
-              setSelectedColor('#FF0000');
-            }}>
+            <Button onClick={resetForm}>
               Cancel
             </Button>
           </div>
@@ -119,15 +114,11 @@ const ClassManager = ({
             className={`class-item ${activeClass?.id === item.id ? 'active' : ''}`}
             onClick={() => onSelectClass(item.id)}
           >
-            <div className="class-item-content" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div className="class-item-content">
               <div
                 className="class-color"
-                style={{
+                style={{ 
                   backgroundColor: item.color,
-                  width: '16px',
-                  height: '16px',
-                  borderRadius: '4px',
-                  border: '1px solid #d9d9d9',
                 }}
               />
               <span className="class-name">{item.name}</span>

@@ -231,7 +231,7 @@ html, body {
     .add-class-form {
       .add-class-form-actions {
         display: flex;
-        margin-top: 7px;
+        margin: 7px 0px;
         gap: 5px;
       }
       .form-row {
@@ -251,6 +251,7 @@ html, body {
 .ant-btn {
   background-color: $primary-color;
   color: $text-color;
+  line-height: normal;
 }
 
 .ant-drawer {

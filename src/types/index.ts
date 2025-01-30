@@ -8,6 +8,14 @@ export interface CanvasProps {
   zoom: number;
 }
 
+export interface ClassManagerProps {
+  classes: SegmentationClass[];
+  activeClass: SegmentationClass | null;
+  onAddClass: (className: string, color: string) => void;
+  onDeleteClass: (classId: number) => void;
+  onSelectClass: (classId: number) => void;
+}
+
 export interface SegmentationClass {
   id: number;
   name: string;
