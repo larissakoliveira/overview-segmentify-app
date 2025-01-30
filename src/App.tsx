@@ -13,7 +13,6 @@ import {
 } from '@ant-design/icons';
 import { AnnotationMode, COCOFormat, SegmentationClass } from './types';
 import Canvas from './components/Canvas';
-// import Toolbar from './components/Toolbar';
 import ClassManager from './components/ClassManager';
 import { exportToCOCO, downloadJSON } from './utils/cocoExport';
 import 'antd/dist/reset.css';
@@ -31,7 +30,7 @@ const App = () => {
   const [activeClass, setActiveClass] = useState<SegmentationClass | null>(null);
   const [history, setHistory] = useState<string[]>([]);
   const [currentHistoryIndex, setCurrentHistoryIndex] = useState(-1);
-  const [images, setImages] = useState<{ src: string; name: string }[]>([]);
+  const [images, setImages] = useState<{ src: string; name: string; width?: number; height?: number }[]>([]);
   const [isCompact, setIsCompact] = useState(false);
   const [drawerVisible, setDrawerVisible] = useState(false);
   const [zoom, setZoom] = useState(100);
@@ -144,11 +143,21 @@ const App = () => {
       const result = e.target?.result;
       if (result && typeof result === 'string') {
         const fileName = file.name;
-  
-        setImages((prevImages) => [
-          ...prevImages,
-          { src: result, name: fileName },
-        ]);
+        
+        const img = new Image();
+        img.onload = () => {
+          setImages((prevImages) => [
+            ...prevImages,
+            { 
+              src: result, 
+              name: fileName,
+              width: img.width,
+              height: img.height
+            },
+          ]);
+        };
+        img.src = result;
+        
         setHistory([]);
         setCurrentHistoryIndex(-1);
       }
@@ -189,8 +198,8 @@ const App = () => {
         cocoData.images.push({
           id: imageId,
           file_name: image.name,
-          height: fabricCanvasRef.current.imageHeight || 0,
-          width: fabricCanvasRef.current.imageWidth || 0,
+          height: image.height || 0,
+          width: image.width || 0,
           license: memoizedMetaData.licenses[0].id,
           coco_url: memoizedMetaData.coco_url.replace('{fileName}', image.name),
           date_captured: memoizedMetaData.date_created,
@@ -239,6 +248,80 @@ const App = () => {
   const renderToolbar = () => (
     <Space className="toolbar">
       <Space>
+        <Tooltip title="Polygon Tool">
+          <Button
+            type={mode === 'polygon' ? 'primary' : 'default'}
+            icon={<BorderOutlined />}
+            onClick={() => handleModeChange('polygon')}
+          />
+        </Tooltip>
+        <Tooltip title="Brush Tool">
+          <Button
+            type={mode === 'brush' ? 'primary' : 'default'}
+            icon={<EditOutlined />}
+            onClick={() => handleModeChange('brush')}
+          />
+        </Tooltip>
+        <Slider
+            className="brush-size-slider"
+            min={1}
+            max={100}
+            value={brushSize}
+            onChange={setBrushSize}
+          />
+      </Space>
+      <Space>
+        <Tooltip title="Eraser">
+          <Button
+            type={mode === 'eraser' ? 'primary' : 'default'}
+            icon={<ClearOutlined />}
+            onClick={() => handleModeChange('eraser')}
+          />
+        </Tooltip>
+        <Tooltip title="Undo">
+          <Button
+            icon={<UndoOutlined />}
+            onClick={handleUndo}
+            disabled={currentHistoryIndex <= 0}
+          />
+        </Tooltip>
+        <Tooltip title="Redo">
+          <Button
+            icon={<RedoOutlined />}
+            onClick={handleRedo}
+            disabled={currentHistoryIndex >= history.length - 1}
+          />
+        </Tooltip>
+      </Space>
+
+
+      <Space>
+        <Tooltip title="Zoom Out">
+          <Button
+            icon={<ZoomOutOutlined />}
+            onClick={handleZoomOut}
+            disabled={zoom <= 50}
+          />
+        </Tooltip>
+        <Select
+          value={zoom}
+          onChange={setZoom}
+          style={{ width: 80 }}
+        >
+          <Option value={50}>50%</Option>
+          <Option value={100}>100%</Option>
+          <Option value={150}>150%</Option>
+          <Option value={200}>200%</Option>
+        </Select>
+        <Tooltip title="Zoom In">
+          <Button
+            icon={<ZoomInOutlined />}
+            onClick={handleZoomIn}
+            disabled={zoom >= 200}
+          />
+        </Tooltip>
+      </Space>
+      <Space>
         <Tooltip title="Upload Image">
           <Button
             icon={<UploadOutlined />}
@@ -259,81 +342,6 @@ const App = () => {
             disabled={!images}
           />
         </Tooltip>
-      </Space>
-
-      <Space>
-        <Tooltip title="Undo">
-          <Button
-            icon={<UndoOutlined />}
-            onClick={handleUndo}
-            disabled={currentHistoryIndex <= 0}
-          />
-        </Tooltip>
-        <Tooltip title="Redo">
-          <Button
-            icon={<RedoOutlined />}
-            onClick={handleRedo}
-            disabled={currentHistoryIndex >= history.length - 1}
-          />
-        </Tooltip>
-      </Space>
-
-      <Space>
-        <Tooltip title="Brush Tool">
-          <Button
-            type={mode === 'brush' ? 'primary' : 'default'}
-            icon={<EditOutlined />}
-            onClick={() => handleModeChange('brush')}
-          />
-        </Tooltip>
-        <Tooltip title="Polygon Tool">
-          <Button
-            type={mode === 'polygon' ? 'primary' : 'default'}
-            icon={<BorderOutlined />}
-            onClick={() => handleModeChange('polygon')}
-          />
-        </Tooltip>
-        <Tooltip title="Eraser">
-          <Button
-            type={mode === 'eraser' ? 'primary' : 'default'}
-            icon={<ClearOutlined />}
-            onClick={() => handleModeChange('eraser')}
-          />
-        </Tooltip>
-        <Slider
-            className="brush-size-slider"
-            min={1}
-            max={100}
-            value={brushSize}
-            onChange={setBrushSize}
-          />
-      </Space>
-
-      <Space>
-        <Tooltip title="Zoom In">
-          <Button
-            icon={<ZoomInOutlined />}
-            onClick={handleZoomIn}
-            disabled={zoom >= 200}
-          />
-        </Tooltip>
-        <Tooltip title="Zoom Out">
-          <Button
-            icon={<ZoomOutOutlined />}
-            onClick={handleZoomOut}
-            disabled={zoom <= 50}
-          />
-        </Tooltip>
-        <Select
-          value={zoom}
-          onChange={setZoom}
-          style={{ width: 100 }}
-        >
-          <Option value={50}>50%</Option>
-          <Option value={100}>100%</Option>
-          <Option value={150}>150%</Option>
-          <Option value={200}>200%</Option>
-        </Select>
       </Space>
     </Space>
   );

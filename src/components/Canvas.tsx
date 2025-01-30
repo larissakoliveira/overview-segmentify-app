@@ -79,7 +79,6 @@ const Canvas = ({
     updateCanvasSize();
     window.addEventListener('resize', updateCanvasSize);
 
-    // Enable panning when spacebar is held
     let isPanning = false;
     let lastPosX: number;
     let lastPosY: number;
@@ -324,7 +323,7 @@ const Canvas = ({
 
     const center = canvas.getCenter();
     canvas.zoomToPoint(new fabric.Point(center.left, center.top), zoom / 100);
-  }, [zoom, fabricCanvasRef]);  // verificar a utilidade lorena
+  }, [zoom, fabricCanvasRef]);
 
   useEffect(() => {
     const canvas = fabricCanvasRef.current;
