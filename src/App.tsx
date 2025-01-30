@@ -235,27 +235,31 @@ const App = () => {
 
   const renderToolbar = () => {
     const toolbarContent = (
-      <Space direction={isCompact ? 'vertical' : 'horizontal'} size="middle">
+      <Space direction={isCompact ? 'vertical' : 'horizontal'} size="middle" style={{ width: '100%' }}>
         <Space>
-          <Tooltip title="Upload Image">
+          <Tooltip title="Image Upload">
             <Button
               icon={<UploadOutlined />}
               onClick={() => document.getElementById('image-upload')?.click()}
-            />
-            <input
-              id="image-upload"
-              type="file"
-              accept="image/*"
-              style={{ display: 'none' }}
-              onChange={(e) => e.target.files && handleImageUpload(e.target.files[0])}
-            />
+            >
+              {isCompact ? 'Upload Image' : ''}
+            </Button>
           </Tooltip>
-          <Tooltip title="Export Annotations">
+          <input
+            id="image-upload"
+            type="file"
+            accept="image/*"
+            style={{ display: 'none' }}
+            onChange={(e) => e.target.files && handleImageUpload(e.target.files[0])}
+          />
+           <Tooltip title="Image Download">
             <Button
               icon={<DownloadOutlined />}
               onClick={handleExport}
               disabled={!images}
-            />
+            >
+              {isCompact ? 'Export Annotations' : ''}
+            </Button>
           </Tooltip>
         </Space>
         <Space>
@@ -264,14 +268,18 @@ const App = () => {
               type={mode === 'polygon' ? 'primary' : 'default'}
               icon={<BorderOutlined />}
               onClick={() => handleModeChange('polygon')}
-            />
+            >
+              {isCompact ? 'Polygon Tool' : ''}
+            </Button>
           </Tooltip>
           <Tooltip title="Brush Tool">
-            <Button
-              type={mode === 'brush' ? 'primary' : 'default'}
-              icon={<EditOutlined />}
-              onClick={() => handleModeChange('brush')}
-            />
+          <Button
+            type={mode === 'brush' ? 'primary' : 'default'}
+            icon={<EditOutlined />}
+            onClick={() => handleModeChange('brush')}
+          >
+            {isCompact ? 'Brush Tool' : ''}
+          </Button>
           </Tooltip>
           <Slider
             className="brush-size-slider"
@@ -282,26 +290,32 @@ const App = () => {
           />
         </Space>
         <Space>
-          <Tooltip title="Eraser">
+          <Tooltip title="Eraser Tool">
             <Button
               type={mode === 'eraser' ? 'primary' : 'default'}
               icon={<ClearOutlined />}
               onClick={() => handleModeChange('eraser')}
-            />
+            >
+              {isCompact ? 'Eraser' : ''}
+            </Button>
           </Tooltip>
           <Tooltip title="Undo">
             <Button
               icon={<UndoOutlined />}
               onClick={handleUndo}
               disabled={currentHistoryIndex <= 0}
-            />
+            >
+              {isCompact ? 'Undo' : ''}
+            </Button>
           </Tooltip>
           <Tooltip title="Redo">
             <Button
               icon={<RedoOutlined />}
               onClick={handleRedo}
               disabled={currentHistoryIndex >= history.length - 1}
-            />
+            >
+              {isCompact ? 'Redo' : ''}
+            </Button>
           </Tooltip>
         </Space>
         <Space>
@@ -310,24 +324,26 @@ const App = () => {
               icon={<ZoomOutOutlined />}
               onClick={handleZoomOut}
               disabled={zoom <= 50}
-            />
+            >
+            </Button>
           </Tooltip>
           <Select
             value={zoom}
             onChange={setZoom}
-            style={{ width: 80 }}
+            style={{ width: isCompact ? '100%' : 80 }}
           >
             <Option value={50}>50%</Option>
             <Option value={100}>100%</Option>
             <Option value={150}>150%</Option>
             <Option value={200}>200%</Option>
           </Select>
-          <Tooltip title="Zoom In">
+            <Tooltip title="Zoom In">
             <Button
               icon={<ZoomInOutlined />}
               onClick={handleZoomIn}
               disabled={zoom >= 200}
-            />
+            >
+            </Button>
           </Tooltip>
         </Space>
       </Space>
@@ -336,20 +352,38 @@ const App = () => {
     if (isCompact) {
       return (
         <>
-          <Button 
-            type="text"
-            icon={<MenuOutlined />}
-            onClick={toggleMobileMenu}
-            className="mobile-menu-trigger"
-          />
+          <Space>
+            <Button
+              icon={<UndoOutlined />}
+              onClick={handleUndo}
+              disabled={currentHistoryIndex < 0}
+            />
+            <Button
+              icon={<RedoOutlined />}
+              onClick={handleRedo}
+              disabled={currentHistoryIndex >= history.length - 1}
+            />
+            <Select
+              value={zoom}
+              onChange={setZoom}
+              style={{ width: 80 }}
+            >
+              <Option value={50}>50%</Option>
+              <Option value={100}>100%</Option>
+              <Option value={150}>150%</Option>
+              <Option value={200}>200%</Option>
+            </Select>
+          </Space>
           <Drawer
             title="Tools"
-            placement="left"
+            placement="right"
             onClose={toggleMobileMenu}
             open={mobileMenuVisible}
             width={300}
           >
-            {toolbarContent}
+            <Space direction="vertical" size="middle" style={{ width: '100%', padding: '16px' }}>
+              {toolbarContent}
+            </Space>
           </Drawer>
         </>
       );
@@ -385,18 +419,17 @@ const App = () => {
   return (
     <div className="app-container">
       <Header className="header">
-        <div className="header-content">
-          {isCompact ? (
-            <>
-              <Button type="text" onClick={toggleSidebar}>Select Class</Button>
-              {renderToolbar()}
-            </>
-          ) : (
-            <>
-              <Button type="text" onClick={toggleSidebar}>Select Class</Button>
-              {renderToolbar()}
-            </>
-          )}
+        <div className="header-content">          
+            {isCompact && (
+              <Button 
+                type="text"
+                icon={<MenuOutlined />}
+                onClick={toggleMobileMenu}
+                className="mobile-menu-trigger"
+              />
+            )}
+            <Button type="text" onClick={toggleSidebar}>Select Class</Button>
+            {renderToolbar()}
         </div>
       </Header>
 

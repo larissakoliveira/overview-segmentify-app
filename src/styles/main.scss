@@ -58,10 +58,6 @@ html, body {
           display: block;
         }
       }
-
-      @include mobile-tablet {
-        justify-content: space-between;
-      }
     }
 
     .toolbar {
@@ -289,15 +285,22 @@ html, body {
   .ant-btn {
     min-height: 40px;
     min-width: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    gap: 8px;
     
     &.ant-btn-icon-only {
       width: 40px;
       height: 40px;
+      justify-content: center;
     }
   }
 
   .ant-select {
     height: 40px;
+    width: 100%;
     
     .ant-select-selector {
       height: 40px !important;
@@ -310,16 +313,24 @@ html, body {
 
   .brush-size-slider {
     margin: 8px 0;
+    width: 100%;
+  }
+
+  .ant-drawer {
+    .ant-space {
+      width: 100%;
+      flex-direction: column;
+
+      .ant-space-item {
+        width: 100%;
+      }
+    }
   }
 }
 
 @include mobile {
   .ant-btn {
-    padding: 4px 8px;
+    padding: 4px 12px;
     font-size: 14px;
-  }
-
-  .ant-select {
-    width: 90px !important;
   }
 }
