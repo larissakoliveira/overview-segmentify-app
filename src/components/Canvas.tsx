@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { fabric } from 'fabric';
 import { CanvasProps } from '../types';
+import { useImageHandler } from '../hooks/useImageHandler';
 
 const Canvas = ({
   mode,
@@ -19,7 +20,7 @@ const Canvas = ({
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!canvasRef.current || !containerRef.current) return;
+    if (!canvasRef.current || !containerRef.current || fabricCanvasRef.current) return;
 
     const container = containerRef.current;
     const width = container.clientWidth;
@@ -31,6 +32,8 @@ const Canvas = ({
       width,
       height,
       backgroundColor: '#f0f0f0',
+      renderOnAddRemove: true,
+      stateful: false,
     });
 
     fabricCanvasRef.current = canvas;
@@ -203,8 +206,8 @@ const Canvas = ({
       canvas.renderAll();
     };
 
-    document.addEventListener('keydown', handleKeyDown);
-    document.addEventListener('keyup', handleKeyUp);
+    document.addEventListener('keydown', handleKeyDown, { passive: true });
+    document.addEventListener('keyup', handleKeyUp, { passive: true });
     canvas.on('mouse:down', handleMouseDown);
     canvas.on('mouse:move', handleMouseMove);
     canvas.on('mouse:down', handleCanvasClick);
@@ -325,49 +328,10 @@ const Canvas = ({
     canvas.zoomToPoint(new fabric.Point(center.left, center.top), zoom / 100);
   }, [zoom, fabricCanvasRef]);
 
-  useEffect(() => {
-    const canvas = fabricCanvasRef.current;
-    if (!canvas || !currentImage) return;
-  
-    fabric.Image.fromURL(
-      currentImage.src,
-      (img) => {
-        if (!img) return;
-  
-        const canvasWidth = canvas.getWidth();
-        const canvasHeight = canvas.getHeight();
-        const imgAspectRatio = img.width! / img.height!;
-        const maxWidth = canvasWidth * 0.3;
-        const maxHeight = canvasHeight * 0.3;
-
-        let scaleX, scaleY;
-        if (imgAspectRatio > 1) {
-          scaleX = maxWidth / img.width!;
-          scaleY = scaleX;
-        } else {
-          scaleY = maxHeight / img.height!;
-          scaleX = scaleY;
-        }
-
-        const randomLeft = Math.random() * (canvasWidth - img.width! * scaleX);
-        const randomTop = Math.random() * (canvasHeight - img.height! * scaleY);
-  
-        img.set({
-          left: randomLeft,
-          top: randomTop,
-          scaleX,
-          scaleY,
-          selectable: true,
-          evented: true,
-        });
-  
-        canvas.add(img);
-        canvas.isDrawingMode = false;
-        canvas.renderAll();
-      },
-      { crossOrigin: 'anonymous' }
-    );
-  }, [currentImage, fabricCanvasRef]);
+  useImageHandler({
+      fabricCanvasRef,
+      currentImage,
+    });
   
   useEffect(() => {
     const canvas = fabricCanvasRef.current;

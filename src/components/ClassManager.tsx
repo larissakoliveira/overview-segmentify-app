@@ -49,7 +49,7 @@ const ClassManager = ({
     onDeleteClass(classId);
   },
   [onDeleteClass]
-  );
+ );
 
   const colorPicker = useMemo(() => (
     <ChromePicker

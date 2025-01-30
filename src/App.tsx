@@ -1,27 +1,18 @@
-import React, { useState, useCallback, useEffect, useRef, useMemo } from 'react';
-import { Layout, message, Button, Drawer, Space, Tooltip, Select, Slider } from 'antd';
+import { useState, useCallback, useEffect, useRef } from 'react';
+import { Layout, message, Button, Drawer } from 'antd';
 import {
-  UndoOutlined,
-  RedoOutlined,
-  DownloadOutlined,
-  UploadOutlined,
-  EditOutlined,
-  BorderOutlined,
-  ZoomInOutlined,
-  ZoomOutOutlined,
-  ClearOutlined,
   MenuOutlined,
 } from '@ant-design/icons';
 import { AnnotationMode, COCOFormat, SegmentationClass } from './types';
 import Canvas from './components/Canvas';
 import ClassManager from './components/ClassManager';
+import Toolbar from './components/Toolbar';
 import { exportToCOCO, downloadJSON } from './utils/cocoExport';
 import { appMetadata } from './config/metadata';
 import 'antd/dist/reset.css';
 import './styles/main.scss';
 
 const { Header, Content } = Layout;
-const { Option } = Select;
 
 const TABLET_BREAKPOINT = 768;
 
@@ -233,165 +224,6 @@ const App = () => {
     setMobileMenuVisible(!mobileMenuVisible);
   };
 
-  const renderToolbar = () => {
-    const toolbarContent = (
-      <Space direction={isCompact ? 'vertical' : 'horizontal'} size="middle" style={{ width: '100%' }}>
-        <Space>
-          <Tooltip title="Image Upload">
-            <Button
-              icon={<UploadOutlined />}
-              onClick={() => document.getElementById('image-upload')?.click()}
-            >
-              {isCompact ? 'Upload Image' : ''}
-            </Button>
-          </Tooltip>
-          <input
-            id="image-upload"
-            type="file"
-            accept="image/*"
-            style={{ display: 'none' }}
-            onChange={(e) => e.target.files && handleImageUpload(e.target.files[0])}
-          />
-           <Tooltip title="Image Download">
-            <Button
-              icon={<DownloadOutlined />}
-              onClick={handleExport}
-              disabled={!images}
-            >
-              {isCompact ? 'Export Annotations' : ''}
-            </Button>
-          </Tooltip>
-        </Space>
-        <Space>
-          <Tooltip title="Polygon Tool">
-            <Button
-              type={mode === 'polygon' ? 'primary' : 'default'}
-              icon={<BorderOutlined />}
-              onClick={() => handleModeChange('polygon')}
-            >
-              {isCompact ? 'Polygon Tool' : ''}
-            </Button>
-          </Tooltip>
-          <Tooltip title="Brush Tool">
-          <Button
-            type={mode === 'brush' ? 'primary' : 'default'}
-            icon={<EditOutlined />}
-            onClick={() => handleModeChange('brush')}
-          >
-            {isCompact ? 'Brush Tool' : ''}
-          </Button>
-          </Tooltip>
-          <Slider
-            className="brush-size-slider"
-            min={1}
-            max={100}
-            value={brushSize}
-            onChange={setBrushSize}
-          />
-        </Space>
-        <Space>
-          <Tooltip title="Eraser Tool">
-            <Button
-              type={mode === 'eraser' ? 'primary' : 'default'}
-              icon={<ClearOutlined />}
-              onClick={() => handleModeChange('eraser')}
-            >
-              {isCompact ? 'Eraser' : ''}
-            </Button>
-          </Tooltip>
-          <Tooltip title="Undo">
-            <Button
-              icon={<UndoOutlined />}
-              onClick={handleUndo}
-              disabled={currentHistoryIndex <= 0}
-            >
-              {isCompact ? 'Undo' : ''}
-            </Button>
-          </Tooltip>
-          <Tooltip title="Redo">
-            <Button
-              icon={<RedoOutlined />}
-              onClick={handleRedo}
-              disabled={currentHistoryIndex >= history.length - 1}
-            >
-              {isCompact ? 'Redo' : ''}
-            </Button>
-          </Tooltip>
-        </Space>
-        <Space>
-          <Tooltip title="Zoom Out">
-            <Button
-              icon={<ZoomOutOutlined />}
-              onClick={handleZoomOut}
-              disabled={zoom <= 50}
-            >
-            </Button>
-          </Tooltip>
-          <Select
-            value={zoom}
-            onChange={setZoom}
-            style={{ width: isCompact ? '100%' : 80 }}
-          >
-            <Option value={50}>50%</Option>
-            <Option value={100}>100%</Option>
-            <Option value={150}>150%</Option>
-            <Option value={200}>200%</Option>
-          </Select>
-            <Tooltip title="Zoom In">
-            <Button
-              icon={<ZoomInOutlined />}
-              onClick={handleZoomIn}
-              disabled={zoom >= 200}
-            >
-            </Button>
-          </Tooltip>
-        </Space>
-      </Space>
-    );
-
-    if (isCompact) {
-      return (
-        <>
-          <Space>
-            <Button
-              icon={<UndoOutlined />}
-              onClick={handleUndo}
-              disabled={currentHistoryIndex < 0}
-            />
-            <Button
-              icon={<RedoOutlined />}
-              onClick={handleRedo}
-              disabled={currentHistoryIndex >= history.length - 1}
-            />
-            <Select
-              value={zoom}
-              onChange={setZoom}
-              style={{ width: 80 }}
-            >
-              <Option value={50}>50%</Option>
-              <Option value={100}>100%</Option>
-              <Option value={150}>150%</Option>
-              <Option value={200}>200%</Option>
-            </Select>
-          </Space>
-          <Drawer
-            title="Tools"
-            placement="right"
-            onClose={toggleMobileMenu}
-            open={mobileMenuVisible}
-            width={300}
-          >
-            <Space direction="vertical" size="middle" style={{ width: '100%', padding: '16px' }}>
-              {toolbarContent}
-            </Space>
-          </Drawer>
-        </>
-      );
-    }
-
-    return toolbarContent;
-  };
-
   const renderClassManager = () => (
     <div className="class-manager">
       <div className="class-manager-content">
@@ -429,7 +261,27 @@ const App = () => {
               />
             )}
             <Button type="text" onClick={toggleSidebar}>Select Class</Button>
-            {renderToolbar()}
+            <Toolbar
+              mode={mode}
+              brushSize={brushSize}
+              zoom={zoom}
+              isCompact={isCompact}
+              currentHistoryIndex={currentHistoryIndex}
+              historyLength={history.length}
+              activeClass={activeClass}
+              mobileMenuVisible={mobileMenuVisible}
+              hasImages={images.length > 0}
+              onModeChange={handleModeChange}
+              onBrushSizeChange={setBrushSize}
+              onZoomChange={setZoom}
+              onZoomIn={handleZoomIn}
+              onZoomOut={handleZoomOut}
+              onUndo={handleUndo}
+              onRedo={handleRedo}
+              onImageUpload={handleImageUpload}
+              onExport={handleExport}
+              toggleMobileMenu={toggleMobileMenu}
+            />
         </div>
       </Header>
 

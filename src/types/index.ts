@@ -1,10 +1,13 @@
+import { RefObject } from 'react';
+import { fabric } from 'fabric';
+
 export interface CanvasProps {
   mode: AnnotationMode;
   brushSize: number;
   activeClass: SegmentationClass | null;
   currentImage: { src: string; name: string } | null;
   onHistoryUpdate: (canvasState: string) => void;
-  fabricCanvasRef: React.RefObject<fabric.Canvas | null>;
+  fabricCanvasRef: RefObject<fabric.Canvas | null>;
   zoom: number;
 }
 
@@ -14,6 +17,11 @@ export interface ClassManagerProps {
   onAddClass: (className: string, color: string) => void;
   onDeleteClass: (classId: number) => void;
   onSelectClass: (classId: number) => void;
+}
+
+export interface FabricObject extends fabric.Object {
+  path?: any[];
+  points?: { x: number; y: number }[];
 }
 
 export interface SegmentationClass {
@@ -62,6 +70,13 @@ export interface COCOFormat {
     name: string;
     supercategory?: string;
   }[];
+}
+
+export type AnnotationMode = 'brush' | 'polygon' | 'eraser' | 'pan' | 'select';
+
+export interface ImageHandlerProps {
+  fabricCanvasRef: RefObject<fabric.Canvas | null>;
+  currentImage: { src: string; name: string } | null;
 }
 
 export type AnnotationMode = 'brush' | 'polygon' | 'eraser' | 'pan' | 'select';

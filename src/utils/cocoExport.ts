@@ -1,10 +1,5 @@
 import { fabric } from 'fabric';
-import { SegmentationClass, COCOFormat, Annotation } from '../types';
-
-interface FabricObject extends fabric.Object {
-  path?: any[];
-  points?: { x: number; y: number }[];
-}
+import { SegmentationClass, COCOFormat, Annotation, FabricObject } from '../types';
 
 function getPathPoints(path: FabricObject): number[][] {
   const points: number[][] = [];
