@@ -275,7 +275,7 @@ const Canvas = ({
   
     const brush = canvas.freeDrawingBrush as fabric.PencilBrush;
     if (brush) {
-      brush.width = brushSize * (1 / zoom);
+      brush.width = brushSize * (5 / zoom);
       brush.color = activeClass?.color || '#000000';
     }
   
