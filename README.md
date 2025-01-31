@@ -1,6 +1,9 @@
 # Overview Segmentify App
 
 A React-based web application for image segmentation and annotation. This application allows users to load images and create segmented areas with customizable properties, making it ideal for image annotation tasks.
+![image](https://github.com/user-attachments/assets/3fe74e6d-4b4c-4053-842a-258dcbb92838)
+![image](https://github.com/user-attachments/assets/08edb886-f4d3-4c96-b671-297798950303)
+![image](https://github.com/user-attachments/assets/acfd648c-f62e-4019-8a00-bfd1833eb92e)
 
 ## Features
 
