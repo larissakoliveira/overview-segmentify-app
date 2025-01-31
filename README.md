@@ -56,7 +56,7 @@ The application will be available at [http://localhost:3000](http://localhost:30
    - Start the development server using `npm start`
    - Open your browser and navigate to `http://localhost:3000`
 
-2. **Working with the App**
+2. **Working with the app's features**
    - Upload an image using the upload button
    - Create a segmentation class and choose a unique color and name
    - Use the canvas tools to create and modify segments
