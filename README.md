@@ -56,13 +56,10 @@ The application will be available at [http://localhost:3000](http://localhost:30
    - Start the development server using `npm start`
    - Open your browser and navigate to `http://localhost:3000`
 
-2. **Working with Images e Classes**
+2. **Working with the App**
    - Upload an image using the upload button
    - Create a segmentation class and choose a unique color and name
    - Use the canvas tools to create and modify segments
-   - Customize segment properties using the toolbar controls
-
-3. **Annotation Tools**
    - Use the drawing tools to create segments
    - Adjust colors and properties of segments
    - Save or export your work as needed
