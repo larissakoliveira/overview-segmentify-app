@@ -9,8 +9,10 @@ import {
   DownloadOutlined,
   ZoomInOutlined,
   ZoomOutOutlined,
+  DragOutlined,
 } from '@ant-design/icons';
 import { AnnotationMode, SegmentationClass } from '../../types';
+import { Hand } from '@phosphor-icons/react';
 
 const { Option } = Select;
 
@@ -85,6 +87,24 @@ const Toolbar = ({
         </Tooltip>
       </Space>
       <Space>
+      <Tooltip title="Select Tool">
+          <Button
+            type={mode === 'select' ? 'primary' : 'default'}
+            icon={<DragOutlined />}
+            onClick={() => onModeChange('select')}
+          >
+              {isCompact ? 'Select Tool' : ''}
+          </Button>
+        </Tooltip>
+        <Tooltip title="Pan Tool">
+          <Button
+            type={mode === 'pan' ? 'primary' : 'default'}
+            icon={<Hand size={16} weight="regular" />}
+            onClick={() => onModeChange('pan')}
+            >
+            {isCompact ? 'Pan Tool' : ''}
+        </Button>
+        </Tooltip>
         <Tooltip title="Polygon Tool">
           <Button
             type={mode === 'polygon' ? 'primary' : 'default'}
@@ -140,8 +160,8 @@ const Toolbar = ({
           </Button>
         </Tooltip>
       </Space>
-      <Space>
-        <Tooltip title="Zoom Out">
+      <Space className='zoom-controls'>
+        <Tooltip className='zoom-out' title="Zoom Out">
           <Button
             icon={<ZoomOutOutlined />}
             onClick={onZoomOut}

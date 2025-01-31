@@ -283,6 +283,13 @@ html, body {
 
 // Mobile-specific styles
 @include mobile-tablet {
+  .zoom-controls {
+    display: flex;
+    flex-direction: row !important;
+  }
+  .zoom-out {
+    margin-left: 50px;
+  }
   .ant-btn {
     min-height: 40px;
     min-width: 40px;
