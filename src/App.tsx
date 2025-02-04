@@ -224,20 +224,6 @@ const App = () => {
     setMobileMenuVisible(!mobileMenuVisible);
   };
 
-  const renderClassManager = () => (
-    <div className="class-manager">
-      <div className="class-manager-content">
-        <ClassManager
-          classes={classes}
-          activeClass={activeClass}
-          onAddClass={handleAddClass}
-          onDeleteClass={handleDeleteClass}
-          onSelectClass={handleSelectClass}
-        />
-      </div>
-    </div>
-  );
-
   const getContrastTextColor = (hexColor: string) => {
     const r = parseInt(hexColor.slice(1, 3), 16);
     const g = parseInt(hexColor.slice(3, 5), 16);
@@ -322,7 +308,13 @@ const App = () => {
           onClose={toggleSidebar}
           open={visible}
         >
-          {renderClassManager()}
+          <ClassManager
+          classes={classes}
+          activeClass={activeClass}
+          onAddClass={handleAddClass}
+          onDeleteClass={handleDeleteClass}
+          onSelectClass={handleSelectClass}
+        />
         </Drawer>
       </Layout>
     </div>

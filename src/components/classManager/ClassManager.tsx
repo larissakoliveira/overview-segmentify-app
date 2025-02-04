@@ -61,6 +61,7 @@ const ClassManager = ({
 
   return (
     <div className="class-manager">
+      <div className="class-manager-content">
       {!isAdding ? (
         <Button
           type="primary"
@@ -132,6 +133,7 @@ const ClassManager = ({
           </List.Item>
         )}
       />
+      </div>
     </div>
   );
 };
