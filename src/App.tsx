@@ -31,6 +31,7 @@ const App = () => {
   const [mobileMenuVisible, setMobileMenuVisible] = useState(false);
   const fabricCanvasRef = useRef<any>(null);
 
+  //check viewport so the layout is based on the viewport size
   useEffect(() => {
     const checkViewport = () => {
       setIsCompact(window.innerWidth <= TABLET_BREAKPOINT);
@@ -41,6 +42,7 @@ const App = () => {
     return () => window.removeEventListener('resize', checkViewport);
   }, []);
 
+  // manages the state updates for adding a new class
   const handleAddClass = useCallback((className: string, color: string) => {
     const newClass: SegmentationClass = {
       id: classes.length + 1,
@@ -54,11 +56,13 @@ const App = () => {
     }
   }, [classes.length, isCompact]);
 
+  // manages the state updates for deleting a class
   const handleDeleteClass = useCallback((classId: number) => {
     setClasses(prev => prev.filter(cls => cls.id !== classId));
     setActiveClass(prev => prev?.id === classId ? null : prev);
   }, []);
 
+  // to set the selected class
   const handleSelectClass = useCallback((classId: number) => {
     setActiveClass(prev => classes.find(cls => cls.id === classId) || prev);
     if (isCompact) {
@@ -66,6 +70,7 @@ const App = () => {
     }
   }, [classes, isCompact]);
 
+  //this keeps track of the history of the canvas
   const handleHistoryUpdate = useCallback((canvasState: string) => {
     setHistory(prev => {
       const newHistory = [...prev.slice(0, currentHistoryIndex + 1), canvasState];
@@ -74,6 +79,7 @@ const App = () => {
     });
   }, [currentHistoryIndex]);
 
+  // to undo the last action on canvas
   const handleUndo = useCallback(() => {
     if (currentHistoryIndex >= 0) {
       setCurrentHistoryIndex(prev => {
@@ -88,6 +94,7 @@ const App = () => {
     }
   }, [currentHistoryIndex, history]);
 
+  // to redo the last action on canvas
   const handleRedo = useCallback(() => {
     if (currentHistoryIndex < history.length - 1) {
       setCurrentHistoryIndex(prev => {
@@ -102,6 +109,8 @@ const App = () => {
     }
   }, [currentHistoryIndex, history]);
 
+  // It reads the image file, creates an Image object, and updates the state with the image details, handles the upload. Use this in the toolbar component.
+  // deals with file input and state management,
   const handleImageUpload = useCallback((file: File) => {
     if (!file) {
       message.error('Please select an image file');
@@ -143,6 +152,7 @@ const App = () => {
     reader.readAsDataURL(file);
   }, []);  
 
+  // manages the overall export workflow, to export the annotations in COCO format
   const handleExport = useCallback(() => {
     if (images.length === 0) {
       message.error('Please upload at least one image');
@@ -200,6 +210,7 @@ const App = () => {
     }
   }, [images, classes, fabricCanvasRef, appMetadata]);
 
+  // add % symbol for both
   const handleZoomIn = useCallback(() => {
     setZoom(prev => Math.min(prev + 10, 200));
   }, []);
@@ -224,6 +235,7 @@ const App = () => {
     setMobileMenuVisible(!mobileMenuVisible);
   };
 
+  // background and text color of the div changes based on the selected color
   const getContrastTextColor = (hexColor: string) => {
     const r = parseInt(hexColor.slice(1, 3), 16);
     const g = parseInt(hexColor.slice(3, 5), 16);
@@ -284,6 +296,7 @@ const App = () => {
               zoom={zoom}
             />
           </div>
+          {/* added later to display class, color and tool being used */}
           <div className="status-label">
             <span>Mode: {mode.charAt(0).toUpperCase() + mode.slice(1)} | </span>
             {activeClass && (

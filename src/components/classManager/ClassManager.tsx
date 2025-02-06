@@ -17,12 +17,14 @@ const ClassManager = ({
   const [newClassName, setNewClassName] = useState('');
   const [selectedColor, setSelectedColor] = useState(DEFAULT_COLOR);
 
+  // resets the form to its initial state
   const resetForm = useCallback(() => {
     setIsAdding(false);
     setNewClassName('');
     setSelectedColor(DEFAULT_COLOR);
   }, []);
 
+  // handles the user interaction to add a new class
   const handleAddClass = useCallback(() => {
     const trimmedName = newClassName.trim();
     if (!newClassName.trim()) {
@@ -44,6 +46,7 @@ const ClassManager = ({
     resetForm();
   }, [newClassName, selectedColor, classes, resetForm]);
 
+  // handles the user interaction to delete a class 
   const handleDeleteClass = useCallback( (classId: number, e: React.MouseEvent) => {
     e.stopPropagation();
     onDeleteClass(classId);
@@ -51,6 +54,7 @@ const ClassManager = ({
   [onDeleteClass]
  );
 
+  // color picker component 
   const colorPicker = useMemo(() => (
     <ChromePicker
       color={selectedColor}

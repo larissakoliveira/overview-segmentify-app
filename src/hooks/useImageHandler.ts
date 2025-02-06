@@ -2,6 +2,8 @@ import { useEffect } from 'react';
 import { fabric } from 'fabric';
 import { ImageHandlerProps } from '../types';
 
+// deals with rendering the image on the canvas
+//When Uploading. Add an image to the Fabric.js canvas with random placement and adaptive zoom based on screen size without altering the image size
 export const useImageHandler = ({
   fabricCanvasRef,
   currentImage,
@@ -12,6 +14,7 @@ export const useImageHandler = ({
   
     fabric.Image.fromURL(
       currentImage.src,
+      // for new images
       (img) => {
         if (!img) return;
   
