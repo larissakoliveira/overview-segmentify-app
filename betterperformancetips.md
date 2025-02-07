@@ -90,13 +90,6 @@
 - Add Content Security Policy (Use tools like Helmet in Express to set CSP headers easily)
 - Implement proper CORS policies (Cors middleware in Express to set CORS headers easily.)
 
-## 9. Documentation
-
-### Documentation Improvements
-- Add proper JSDoc comments
-
-
-
 ## vscode
 Performance: Use object caching, memoization, debouncing, lazy loading, and virtualization.
 
