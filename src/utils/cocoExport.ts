@@ -1,5 +1,11 @@
 import { fabric } from 'fabric';
-import { SegmentationClass, COCOFormat, Annotation, FabricObject } from '../types';
+import { SegmentationClass, COCOFormat, Annotation } from '../types';
+
+interface FabricObject extends fabric.Object {
+  path?: any[];
+  points?: { x: number; y: number }[];
+  metadata?: { classId?: number }; // Adicionando a propriedade metadata
+}
 
 function getPathPoints(path: FabricObject): number[][] {
   const points: number[][] = [];
@@ -115,41 +121,20 @@ export function exportToCOCO(
 
   let annotationId = 1;
 
-  canvas.getObjects().forEach((obj: fabric.Object) => {
-    if (obj.type === 'image') return;
-
-    const classId = classes.find((cls) => cls.color === obj.fill || cls.color === obj.stroke)?.id;
-    if (!classId) return;
-
-    let segmentation: number[][] = [];
-    if (obj.type === 'path') {
-      segmentation = getPathPoints(obj as FabricObject);
-    } else if (obj.type === 'polygon') {
-      segmentation = getPolygonPoints(obj as FabricObject);
+  canvas.getObjects().forEach((obj) => {
+    if (obj.type === 'group') {
+      // Processar objetos dentro do grupo
+      annotationId = processGroup(obj as fabric.Group, cocoData, classes, annotationId);
     } else {
-      return;
+      // Processar objetos individuais
+      annotationId = processObject(obj, cocoData, classes, annotationId);
     }
-
-    if (segmentation.length === 0) return;
-
-    const bbox = getBoundingBox(segmentation);
-    const area = calculatePolygonArea(segmentation);
-
-    const annotation: Annotation = {
-      id: annotationId++,
-      image_id: 1,
-      category_id: classId,
-      segmentation,
-      area,
-      bbox,
-      iscrowd: 0,
-    };
-
-    cocoData.annotations.push(annotation);
   });
 
   return cocoData;
 }
+
+
 
 export function downloadJSON(data: any, filename: string): void {
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -161,4 +146,60 @@ export function downloadJSON(data: any, filename: string): void {
   link.click();
   document.body.removeChild(link);
   URL.revokeObjectURL(url);
+}
+
+
+function processObject(obj: FabricObject, cocoData: COCOFormat, classes: SegmentationClass[], annotationId: number): number {
+  if (obj.type === 'image') return annotationId;
+
+  // Verifica se a propriedade metadata existe antes de acessá-la
+  const classId = obj.metadata?.classId ?? 
+                  classes.find((cls) => cls.color === obj.fill || cls.color === obj.stroke)?.id;
+  if (!classId) return annotationId;
+
+  let segmentation: number[][] = [];
+  if (obj.type === 'path') {
+    segmentation = getPathPoints(obj);
+  } else if (obj.type === 'polygon') {
+    segmentation = getPolygonPoints(obj);
+  } else {
+    return annotationId;
+  }
+
+  if (segmentation.length === 0) return annotationId;
+
+  const bbox = getBoundingBox(segmentation);
+  const area = calculatePolygonArea(segmentation);
+
+  const annotation: Annotation = {
+    id: annotationId++,
+    image_id: 1,
+    category_id: classId,
+    segmentation,
+    area,
+    bbox,
+    iscrowd: 0,
+  };
+
+  cocoData.annotations.push(annotation);
+  return annotationId;
+}
+
+
+function processGroup(
+  group: fabric.Group,
+  cocoData: COCOFormat,
+  classes: SegmentationClass[],
+  annotationId: number
+): number {
+  group._objects.forEach((child) => {
+    if (child.type === 'group') {
+      // Recursivamente processar subgrupos
+      annotationId = processGroup(child as fabric.Group, cocoData, classes, annotationId);
+    } else {
+      // Processar objetos dentro do grupo
+      annotationId = processObject(child, cocoData, classes, annotationId);
+    }
+  });
+  return annotationId;
 }
