@@ -76,7 +76,7 @@ const Toolbar = ({
           style={{ display: 'none' }}
           onChange={(e) => e.target.files && onImageUpload(e.target.files[0])}
         />
-        <Tooltip title="Image Download">
+        <Tooltip title="Export to COCO format">
           <Button
             icon={<DownloadOutlined />}
             onClick={onExport}

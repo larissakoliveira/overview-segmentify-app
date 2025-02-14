@@ -20,6 +20,7 @@ const Canvas = ({
   const lines = useRef<fabric.Line[]>([]);
   const containerRef = useRef<HTMLDivElement>(null);
 
+  // handle interactions with a canvas element when drawing polygons using the Fabric.js
   const handlePolygonInteraction = (e: fabric.IEvent, isMouseDown: boolean = false) => {
     const canvas = fabricCanvasRef.current;
     if (!canvas) return;
@@ -112,6 +113,7 @@ const Canvas = ({
     canvas.renderAll();
   };
 
+   // initialize fabric.Canvas
   useEffect(() => {
     if (!canvasRef.current || !containerRef.current || fabricCanvasRef.current) return;
 
@@ -119,6 +121,7 @@ const Canvas = ({
     const width = container.clientWidth;
     const height = container.clientHeight;
 
+    // initialize fabric.Canvas
     const canvas = new fabric.Canvas(canvasRef.current, {
       isDrawingMode: mode === 'brush',
       selection: false,
@@ -131,10 +134,12 @@ const Canvas = ({
 
     fabricCanvasRef.current = canvas;
 
+    // set up free drawing brush
     canvas.freeDrawingBrush = new fabric.PencilBrush(canvas);
     canvas.freeDrawingBrush.width = brushSize;
     canvas.freeDrawingBrush.color = activeClass?.color || '#000000';
 
+    // to update canvas size on window resize
     const updateCanvasSize = () => {
       if (!container) return;
 
@@ -145,6 +150,7 @@ const Canvas = ({
       canvas.setHeight(height);
       
       const objects = canvas.getObjects();
+      // ensures that existing images are resized and positioned correctly when the canvas size changes
       objects.forEach(obj => {
         if (obj.type === 'image') {
           const img = obj as fabric.Image;
@@ -178,6 +184,7 @@ const Canvas = ({
     let lastPosX: number;
     let lastPosY: number;
 
+    // to move elements pressing space bar
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.code === 'Space' && !isPanning.current) {
         isPanning.current = true;
@@ -186,6 +193,7 @@ const Canvas = ({
       }
     };
 
+    // to stop panning when the space bar is released
     const handleKeyUp = (e: KeyboardEvent) => {
       if (e.code === 'Space') {
         isPanning.current = false;
@@ -194,6 +202,7 @@ const Canvas = ({
       }
     };
 
+    // to grab the elements of the canvas using the mouse
     const handleMouseDown = (e: fabric.IEvent) => {
       if (isPanning.current) {
         canvas.defaultCursor = 'grabbing';
@@ -203,6 +212,7 @@ const Canvas = ({
       }
     };
 
+    // to move the elements of the canvas when the mouse is pressed and the space bar is pressed
     const handleMouseMove = (e: fabric.IEvent) => {
       if (isPanning.current && (e.e as MouseEvent).buttons === 1) {
         const pointer = canvas.getPointer(e.e);
@@ -216,10 +226,12 @@ const Canvas = ({
       }
     };
 
+    // handle click events on the canvas and delegate the interaction logic
     const handleCanvasClick = (e: fabric.IEvent) => {
       handlePolygonInteraction(e, false);
     };
 
+    //  passive: true is optional but for performance is good, the browser that the event listener will not call preventDefault()
     document.addEventListener('keydown', handleKeyDown, { passive: true });
     document.addEventListener('keyup', handleKeyUp, { passive: true });
     canvas.on('mouse:down', handleMouseDown);
@@ -238,6 +250,7 @@ const Canvas = ({
     };
   }, []);
 
+  // handle the creation of polygons on the canvas
   useEffect(() => {
     const canvas = fabricCanvasRef.current;
     if (!canvas) return;
@@ -253,6 +266,7 @@ const Canvas = ({
     };
   }, [mode, activeClass, onHistoryUpdate, fabricCanvasRef]);
 
+  // handle the zoom of the canvas
   useEffect(() => {
     const canvas = fabricCanvasRef.current;
     if (!canvas) return;
@@ -261,11 +275,13 @@ const Canvas = ({
     canvas.zoomToPoint(new fabric.Point(center.left, center.top), zoom / 100);
   }, [zoom, fabricCanvasRef]);
 
+  // use the image handler hook to render the image on the canvas
   useImageHandler({
       fabricCanvasRef,
       currentImage,
     });
   
+    // handle the brush size, mode, and active class changes
   useEffect(() => {
     const canvas = fabricCanvasRef.current;
     if (!canvas) return;
@@ -288,6 +304,7 @@ const Canvas = ({
     }
   }, [mode, brushSize, activeClass, zoom, fabricCanvasRef]);
 
+  // handle the onHistoryUpdate when a path is created or the mouseup, updates the history state when the eraser mode is active.
   useEffect(() => {
     const canvas = fabricCanvasRef.current;
     if (!canvas) return;
@@ -316,6 +333,7 @@ const Canvas = ({
     };
   }, [mode, onHistoryUpdate, fabricCanvasRef]);
 
+  // handle the eraser mode, removes objects from the canvas when the eraser mode is active, onHistoryUpdate when mousedown
   useEffect(() => {
     const canvas = fabricCanvasRef.current;
     if (!canvas) return;

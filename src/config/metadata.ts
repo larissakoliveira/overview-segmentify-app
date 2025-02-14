@@ -1,3 +1,4 @@
+// Predefined metadata to meet the requirements of the Python API tests
 export const appMetadata = {
   description: "Semantic Segmentation Dataset",
   url: "http://example.com",

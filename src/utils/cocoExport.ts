@@ -1,6 +1,7 @@
 import { fabric } from 'fabric';
 import { SegmentationClass, COCOFormat, Annotation, FabricObject } from '../types';
 
+// Extracts points from brush FabricObject
 function getPathPoints(path: FabricObject): number[][] {
   const points: number[][] = [];
   const pathData = path.path;
@@ -24,6 +25,7 @@ function getPathPoints(path: FabricObject): number[][] {
   return points;
 }
 
+// Extracts points from a polygon object to flatten them into a single array
 function getPolygonPoints(polygon: FabricObject): number[][] {
   const points: number[][] = [];
   const polygonPoints = polygon.points;
@@ -39,6 +41,7 @@ function getPolygonPoints(polygon: FabricObject): number[][] {
   return points;
 }
 
+// Calculates the bounding box for a set of points bbox 
 function getBoundingBox(points: number[][]): number[] {
   if (!points.length || !points[0].length) return [0, 0, 0, 0];
 
@@ -57,6 +60,7 @@ function getBoundingBox(points: number[][]): number[] {
   return [minX, minY, maxX - minX, maxY - minY];
 }
 
+// calculates the area of a polygon 2D bidimensional
 function calculatePolygonArea(points: number[][]): number {
   if (!points.length || !points[0].length) return 0;
 
@@ -74,6 +78,7 @@ function calculatePolygonArea(points: number[][]): number {
   return Math.abs(area) / 2;
 }
 
+// extraction and formatting of data from the Fabric.js canvas into the COCO format
 export function exportToCOCO(
   canvas: fabric.Canvas,
   classes: SegmentationClass[],
@@ -114,7 +119,7 @@ export function exportToCOCO(
   };
 
   let annotationId = 1;
-
+  
   canvas.getObjects().forEach((obj: fabric.Object) => {
     if (obj.type === 'image') return;
 
@@ -151,6 +156,7 @@ export function exportToCOCO(
   return cocoData;
 }
 
+// downloads the JSON data as a file
 export function downloadJSON(data: any, filename: string): void {
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
